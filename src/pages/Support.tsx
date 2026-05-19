@@ -154,7 +154,7 @@ const Support = () => {
             
             {/* Table Body */}
             <div className="flex flex-col">
-              {mockTickets.map((ticket, idx) => (
+              {mockTickets.map((ticket) => (
                 <div key={ticket.id} className="grid grid-cols-5 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-50 items-center hover:bg-gray-50/50 transition-colors cursor-pointer">
                   <div className="flex justify-center"><div className="w-4 h-4 border-2 border-gray-300 rounded-sm"></div></div>
                   <div className="col-span-1 font-medium">{ticket.company}</div>

@@ -104,7 +104,7 @@ const Business = () => {
           
           {/* Table Body */}
           <div className="flex flex-col">
-            {mockCompanies.map((company, idx) => (
+            {mockCompanies.map((company) => (
               <div key={company.id} className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-50 relative items-center hover:bg-gray-50/50 transition-colors">
                 <div className="flex justify-center"><div className="w-4 h-4 border-2 border-gray-300 rounded-sm"></div></div>
                 <div>{company.company}</div>
