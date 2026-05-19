@@ -1,0 +1,33 @@
+import { Routes, Route } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
+import Dashboard from './pages/Dashboard';
+import Analytics from './pages/Analytics';
+import Business from './pages/Business';
+import Support from './pages/Support';
+import Users from './pages/Users';
+import Settings from './pages/Settings';
+
+function App() {
+  return (
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      {/* START:: Sidebar */}
+      <Sidebar />
+      {/* END:: Sidebar */}
+
+      {/* START:: Main */}
+      <main className="flex-1 w-full overflow-x-hidden overflow-y-auto">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/business" element={<Business />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </main>
+      {/* END:: Main */}
+    </div>
+  )
+}
+
+export default App;
