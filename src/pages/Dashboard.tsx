@@ -7,6 +7,7 @@ import MostUsedFeatures from '../components/dashboard/MostUsedFeatures';
 const Dashboard = () => {
   return (
     <div className="p-8 bg-[#f4f5f9] min-h-full">
+      
       <Head />
       <TopStats />
       
