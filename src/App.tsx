@@ -8,6 +8,7 @@ import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
+import Workloads from './pages/Workloads';
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
       {/* Landing & Auth Pages (No Sidebar) */}
       <Route path="/landing" element={<Landing />} />
       <Route path="/login" element={<Login />} />
-      
+
       {/* Dashboard Pages (With Sidebar) */}
       <Route
         path="/*"
@@ -30,6 +31,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/analytics" element={<Analytics />} />
+                <Route path="/workloads" element={<Workloads />} />
                 <Route path="/business" element={<Business />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/support" element={<Support />} />
