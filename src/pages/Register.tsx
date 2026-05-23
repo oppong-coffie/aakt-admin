@@ -46,7 +46,13 @@ const Register = () => {
 
         setLoading(true);
         try {
-            await authApi.register(formData.email, formData.password, formData.name);
+            const response = await authApi.register(formData.email, formData.password, formData.name);
+            
+            // Store token in localStorage so subsequent auth requests (like sendOtp) succeed
+            if (response && (response.token || response.accessToken)) {
+                localStorage.setItem('auth_token', response.token || response.accessToken);
+            }
+
             // Send OTP to email
             await authApi.sendOtp(formData.email);
             setOtpData({ email: formData.email, otp: '' });
