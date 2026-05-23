@@ -157,6 +157,12 @@ const Register = () => {
                     >
                         Back to Registration
                     </button>
+                    <button
+                        onClick={() => navigate('/landing')}
+                        className="w-full mt-3 text-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-semibold"
+                    >
+                        Back to Home
+                    </button>
                 </div>
             </div>
         );
@@ -258,4 +264,60 @@ const Register = () => {
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                 />
                             </div>
-       
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                Confirm Password
+                            </label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                                <input
+                                    id="confirmPassword"
+                                    type="password"
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleInputChange}
+                                    placeholder="••••••••"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Register Button */}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors mt-6"
+                        >
+                            {loading ? 'Creating account...' : 'Create Account'}
+                        </button>
+                    </form>
+
+                    {/* Login Link */}
+                    <p className="text-center text-gray-600 dark:text-gray-400">
+                        Already have an account?{' '}
+                        <Link to="/login" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold">
+                            Sign in
+                        </Link>
+                    </p>
+                </div>
+
+                {/* Terms */}
+                <p className="mt-8 text-center text-xs text-gray-600 dark:text-gray-400">
+                    By registering, you agree to our{' '}
+                    <a href="#" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold">
+                        Terms of Service
+                    </a>
+                    {' '}and{' '}
+                    <a href="#" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold">
+                        Privacy Policy
+                    </a>
+                </p>
+            </div>
+        </div>
+    );
+};
+
+export default Register;

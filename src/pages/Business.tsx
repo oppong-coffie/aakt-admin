@@ -1,19 +1,46 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Filter, ChevronDown, Plus, MoreHorizontal, Building, CreditCard, Ban, X, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, ChevronDown, Plus, MoreHorizontal, Building, X, Check } from 'lucide-react';
+import { adminApi, portfolioApi } from '../services/api';
 
-const mockCompanies = Array.from({ length: 15 }).map((_, i) => ({
-  id: i,
-  company: 'M-234',
-  plan: 'Prepaid',
-  lastActive: 'F-0003',
-  status: i % 2 === 0 ? 'Investigative' : 'Critical',
-}));
+interface BusinessItem {
+  _id: string;
+  businessName: string;
+  bizConcept?: {
+    product: string;
+    customer: string;
+    goToMarket: string[];
+    culture: string;
+  };
+  product?: string;
+  customer?: string;
+  goToMarket?: string[];
+  culture?: string;
+  createdAt?: string;
+  userid?: string;
+}
 
 const Business = () => {
+  const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeActionRow, setActiveActionRow] = useState<number | null>(null);
-  const [modalState, setModalState] = useState<'none' | 'create' | 'adjust' | 'success'>('none');
+  const [activeActionRow, setActiveActionRow] = useState<string | null>(null);
+  const [modalState, setModalState] = useState<'none' | 'create' | 'success'>('none');
   
+  // Data State
+  const [businesses, setBusinesses] = useState<BusinessItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Form State
+  const [formData, setFormData] = useState({
+    businessName: '',
+    product: '',
+    customer: '',
+    culture: '',
+    goToMarket: [] as string[]
+  });
+
   const filterRef = useRef<HTMLDivElement>(null);
   const actionRef = useRef<HTMLDivElement>(null);
 
@@ -31,15 +58,79 @@ const Business = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const openModal = (type: 'create' | 'adjust') => {
+  const fetchBusinesses = async () => {
+    try {
+      setLoading(true);
+      const res = await adminApi.getAllBusinesses();
+      const list = Array.isArray(res) ? res : (res?.businesses || res?.data || []);
+      setBusinesses(list);
+    } catch (err) {
+      console.error('Error fetching businesses:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBusinesses();
+  }, []);
+
+  const openModal = (type: 'create') => {
     setModalState(type);
     setActiveActionRow(null);
   };
 
+  const handleCreateBusiness = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.businessName.trim()) return;
+    
+    try {
+      setCreating(true);
+      await portfolioApi.createBusiness({
+        businessName: formData.businessName,
+        bizConcept: {
+          product: formData.product || 'General',
+          customer: formData.customer || 'All markets',
+          goToMarket: formData.goToMarket.length > 0 ? formData.goToMarket : ['online_store'],
+          culture: formData.culture || 'Customer-centric'
+        }
+      });
+      setModalState('success');
+      setFormData({
+        businessName: '',
+        product: '',
+        customer: '',
+        culture: '',
+        goToMarket: []
+      });
+      fetchBusinesses();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to create business');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const toggleGoToMarket = (strategy: string) => {
+    setFormData(prev => {
+      const alreadySelected = prev.goToMarket.includes(strategy);
+      return {
+        ...prev,
+        goToMarket: alreadySelected 
+          ? prev.goToMarket.filter(s => s !== strategy)
+          : [...prev.goToMarket, strategy]
+      };
+    });
+  };
+
+  const filteredBusinesses = businesses.filter(b => 
+    b.businessName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="p-8 bg-[#f4f5f9] min-h-full">
+    <div className="p-8 bg-[#f4f5f9] dark:bg-gray-900 min-h-full">
       <div className="mb-6">
-        <h1 className="text-[28px] font-semibold text-gray-900 mb-6">Companies</h1>
+        <h1 className="text-[28px] font-semibold text-gray-900 dark:text-white mb-6">Companies</h1>
         
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-6">
@@ -49,8 +140,10 @@ const Business = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
               <input 
                 type="text" 
-                placeholder="search" 
-                className="pl-9 pr-4 py-2.5 bg-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-[240px] shadow-sm text-[14px]"
+                placeholder="search by name..." 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-[240px] shadow-sm text-[14px] text-gray-800 dark:text-gray-200"
               />
             </div>
             
@@ -58,7 +151,7 @@ const Business = () => {
             <div className="relative" ref={filterRef}>
               <button 
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl shadow-sm text-gray-600 text-[14px] hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2.5 rounded-xl shadow-sm text-gray-605 dark:text-gray-350 text-[14px] hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filter</span>
@@ -66,9 +159,9 @@ const Business = () => {
               </button>
               
               {isFilterOpen && (
-                <div className="absolute top-full left-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-10">
-                  {['Active', 'Suspended', 'Free Trial', 'Pending'].map((opt) => (
-                    <button key={opt} className="w-full text-left px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                <div className="absolute top-full left-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-10">
+                  {['Active', 'Pending'].map((opt) => (
+                    <button key={opt} className="w-full text-left px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-650">
                       {opt}
                     </button>
                   ))}
@@ -79,7 +172,7 @@ const Business = () => {
 
           <button 
             onClick={() => openModal('create')}
-            className="flex items-center gap-2 bg-[#002df3] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[14px] font-medium transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-[#002df3] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[14px] font-medium transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Create New Company
@@ -88,61 +181,72 @@ const Business = () => {
       </div>
 
       {/* Table Area */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm min-h-[500px]">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">List of companies</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm min-h-[500px]">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">List of companies</h3>
         
-        <div className="w-full">
-          {/* Table Header */}
-          <div className="grid grid-cols-6 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-100">
-            <div className="flex justify-center"><div className="w-4 h-4 border-2 border-gray-300 rounded-sm"></div></div>
-            <div>Company</div>
-            <div>Plan</div>
-            <div>Last Active</div>
-            <div>Status</div>
-            <div>Action</div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-blue-655 animate-spin"></div>
           </div>
-          
-          {/* Table Body */}
-          <div className="flex flex-col">
-            {mockCompanies.map((company) => (
-              <div key={company.id} className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-50 relative items-center hover:bg-gray-50/50 transition-colors">
-                <div className="flex justify-center"><div className="w-4 h-4 border-2 border-gray-300 rounded-sm"></div></div>
-                <div>{company.company}</div>
-                <div>{company.plan}</div>
-                <div>{company.lastActive}</div>
-                <div>{company.status}</div>
-                <div className="relative">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveActionRow(activeActionRow === company.id ? null : company.id);
-                    }}
-                    className="w-8 h-6 bg-[#002df3] text-white rounded-md flex items-center justify-center hover:bg-blue-700"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
-                  
-                  {activeActionRow === company.id && (
-                    <div ref={actionRef} className="absolute right-full top-0 mr-2 w-52 bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-20">
-                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                        <Building className="w-4 h-4 text-gray-400" />
-                        View Company Profile
-                      </button>
-                      <button onClick={() => openModal('adjust')} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                        <CreditCard className="w-4 h-4 text-gray-400" />
-                        Adjust Subscription
-                      </button>
-                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-red-600">
-                        <Ban className="w-4 h-4 text-gray-400" />
-                        Deactivate Company
-                      </button>
-                    </div>
-                  )}
+        ) : filteredBusinesses.length > 0 ? (
+          <div className="w-full overflow-x-auto">
+            {/* Table Header */}
+            <div className="grid grid-cols-5 gap-4 pb-4 text-[13px] font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 min-w-[600px]">
+              <div>Company Name</div>
+              <div>Product Focus</div>
+              <div>Target Customers</div>
+              <div>Date Created</div>
+              <div className="text-right">Action</div>
+            </div>
+            
+            {/* Table Body */}
+            <div className="flex flex-col min-w-[600px]">
+              {filteredBusinesses.map((company) => (
+                <div 
+                  key={company._id} 
+                  onClick={() => navigate(`/business/${company._id}`)}
+                  className="grid grid-cols-5 gap-4 py-4 text-[13px] text-gray-650 dark:text-gray-350 border-b border-gray-50 dark:border-gray-700/50 relative items-center hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer"
+                >
+                  <div className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Building className="w-4 h-4 text-blue-500" />
+                    {company.businessName}
+                  </div>
+                  <div className="truncate">{company.bizConcept?.product || company.product || 'General'}</div>
+                  <div className="truncate">{company.bizConcept?.customer || company.customer || 'All markets'}</div>
+                  <div>{company.createdAt ? new Date(company.createdAt).toLocaleDateString() : 'N/A'}</div>
+                  <div className="relative text-right" onClick={e => e.stopPropagation()}>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveActionRow(activeActionRow === company._id ? null : company._id);
+                      }}
+                      className="inline-flex w-8 h-6 bg-[#002df3] text-white rounded-md items-center justify-center hover:bg-blue-700 cursor-pointer"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                    
+                    {activeActionRow === company._id && (
+                      <div ref={actionRef} className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-700 py-2 z-20 text-left">
+                        <button 
+                          onClick={() => navigate(`/business/${company._id}`)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-750 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600"
+                        >
+                          <Building className="w-4 h-4 text-gray-400" />
+                          View Company Profile
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Building className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-2" />
+            <p className="text-gray-500 dark:text-gray-400">No companies found.</p>
+          </div>
+        )}
       </div>
 
       {/* Modals Overlay */}
@@ -151,84 +255,117 @@ const Business = () => {
           
           {/* Create Company Modal */}
           {modalState === 'create' && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative animate-in fade-in zoom-in duration-200">
-              <div className="p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden relative animate-in fade-in zoom-in duration-200">
+              <form onSubmit={handleCreateBusiness} className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Create New Company</h3>
-                  <button onClick={() => setModalState('none')} className="text-gray-400 hover:text-gray-600">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create New Company</h3>
+                  <button type="button" onClick={() => setModalState('none')} className="text-gray-400 hover:text-gray-600">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 
-                <div className="flex flex-col gap-4">
-                  <input type="text" placeholder="Business Name" className="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" />
-                  <input type="text" placeholder="Business Owner name" className="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" />
-                  <input type="text" placeholder="Plan" className="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" />
-                  <input type="text" placeholder="Last Active" className="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" />
-                  <div className="relative">
-                    <select className="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] appearance-none text-gray-500">
-                      <option value="">Status</option>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Business Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="My Awesome Business" 
+                      required
+                      value={formData.businessName}
+                      onChange={e => setFormData({ ...formData, businessName: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 dark:text-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" 
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Product / Concept</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Software as a Service" 
+                      value={formData.product}
+                      onChange={e => setFormData({ ...formData, product: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 dark:text-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" 
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Target Customer</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Small businesses, Enterprise" 
+                      value={formData.customer}
+                      onChange={e => setFormData({ ...formData, customer: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 dark:text-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" 
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Company Culture</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Innovative and fast-paced" 
+                      value={formData.culture}
+                      onChange={e => setFormData({ ...formData, culture: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 dark:text-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" 
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Go-To-Market Strategies</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'online_store', label: 'Online Store' },
+                        { id: 'direct_sales', label: 'Direct Sales' },
+                        { id: 'retail', label: 'Retail' },
+                        { id: 'subscription', label: 'Subscription' },
+                        { id: 'freemium', label: 'Freemium' },
+                        { id: 'marketplace', label: 'Marketplace' },
+                        { id: 'consulting', label: 'Consulting' },
+                        { id: 'partnerships', label: 'Partnerships' }
+                      ].map(strategy => (
+                        <button
+                          type="button"
+                          key={strategy.id}
+                          onClick={() => toggleGoToMarket(strategy.id)}
+                          className={`px-3 py-2 rounded-xl text-[12px] font-semibold border text-left transition-colors flex items-center justify-between ${
+                            formData.goToMarket.includes(strategy.id)
+                              ? 'bg-blue-50 border-blue-550 text-blue-650 dark:bg-blue-900/20 dark:border-blue-800'
+                              : 'bg-white border-gray-200 text-gray-650 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-700'
+                          }`}
+                        >
+                          {strategy.label}
+                          {formData.goToMarket.includes(strategy.id) && <Check className="w-3.5 h-3.5" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 
                 <button 
-                  onClick={() => setModalState('success')}
-                  className="w-full mt-6 bg-[#002df3] hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors text-[14px]"
+                  type="submit"
+                  disabled={creating}
+                  className="w-full mt-6 bg-[#002df3] hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 rounded-xl font-medium transition-colors text-[14px] cursor-pointer"
                 >
-                  Create New Company
+                  {creating ? 'Creating...' : 'Create New Company'}
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* Adjust Subscription Modal */}
-          {modalState === 'adjust' && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden relative animate-in fade-in zoom-in duration-200">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Adjust Subscription</h3>
-                  <button onClick={() => setModalState('none')} className="text-gray-400 hover:text-gray-600">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                <div className="relative mb-6">
-                  <select className="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] appearance-none text-gray-700">
-                    <option value="free">Free Tier</option>
-                    <option value="pro">Pro Tier</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-                
-                <button 
-                  onClick={() => setModalState('none')}
-                  className="w-full bg-[#002df3] hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors text-[14px]"
-                >
-                  Apply Changes
-                </button>
-              </div>
+              </form>
             </div>
           )}
 
           {/* Success Modal */}
           {modalState === 'success' && (
-            <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm overflow-hidden relative p-8 flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl w-full max-w-sm overflow-hidden relative p-8 flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
               <div className="w-16 h-16 bg-[#d1f5d3] rounded-full flex items-center justify-center mb-6">
                 <Check className="w-8 h-8 text-green-600" />
               </div>
               
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 leading-snug">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 leading-snug">
                 You have created new<br/>company successfully
               </h3>
               
               <button 
                 onClick={() => setModalState('none')}
-                className="w-full bg-[#002df3] hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors text-[14px]"
+                className="w-full bg-[#002df3] hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors text-[14px] cursor-pointer"
               >
                 Ok
               </button>

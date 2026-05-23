@@ -66,16 +66,16 @@ const Sidebar = () => {
         </div>
         <ul className="flex flex-col gap-1 px-1">
           <li>
-            <Link
-              to="/landing"
-              className={`flex items-center gap-3 px-3 rounded-xl text-[13px] font-medium transition-colors ${location.pathname === '/landing'
-                ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
-                }`}
+            <button
+              onClick={() => {
+                localStorage.removeItem('auth_token');
+                window.location.href = '/landing';
+              }}
+              className="w-full flex items-center gap-3 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200"
             >
               <LogOut className="w-3 h-3" />
               Logout
-            </Link>
+            </button>
           </li>
         </ul>
       </div>

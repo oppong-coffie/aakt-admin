@@ -137,23 +137,23 @@ const Login = () => {
                     </form>
 
                     {/* Sign Up Link */}
-                    <p className="text-center text-gray-600 dark:text-gray-400">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold">
-                            Sign up
-                        </Link>
-                    </p>
-                </div>
-
-                {/* Demo Info */}
-                <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>API Endpoint:</strong> Uses production backend at aakt-backend-production.up.railway.app
-                    </p>
+                    <div className="text-center mt-6 space-y-3">
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Don't have an account?{' '}
+                            <Link to="/register" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold">
+                                Sign up
+                            </Link>
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <Link to="/landing" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold">
+                                Back to home
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-export default Logi
+export default Login;
