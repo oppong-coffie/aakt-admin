@@ -7,6 +7,7 @@ import Support from './pages/Support';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Landing from './pages/Landing';
 import Workloads from './pages/Workloads';
 
@@ -16,6 +17,7 @@ function App() {
       {/* Landing & Auth Pages (No Sidebar) */}
       <Route path="/landing" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
       {/* Dashboard Pages (With Sidebar) */}
       <Route
