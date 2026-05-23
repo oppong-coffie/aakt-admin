@@ -48,11 +48,11 @@ export const authApi = {
             body: JSON.stringify({ email, password }),
         }, false),
 
-    verifyOtp: (email: string, otp: string) =>
+    verifyOtp: (otp: string) =>
         apiRequest('/auth/verify-otp', {
             method: 'POST',
-            body: JSON.stringify({ email, otp }),
-        }, false),
+            body: JSON.stringify({ otp }),
+        }, true),
 
     sendOtp: (email: string) =>
         apiRequest('/auth/send-otp', {

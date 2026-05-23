@@ -75,7 +75,7 @@ const Register = () => {
 
         setOtpLoading(true);
         try {
-            const response = await authApi.verifyOtp(otpData.email, otpData.otp);
+            const response = await authApi.verifyOtp(otpData.otp);
             // Store token if provided
             if (response.token) {
                 localStorage.setItem('auth_token', response.token);
