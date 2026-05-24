@@ -6,6 +6,7 @@ import { toast } from '../components/Toast';
 
 const Register = () => {
     const navigate = useNavigate();
+    const [isAdmin, setIsAdmin] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -45,18 +46,26 @@ const Register = () => {
 
         setLoading(true);
         try {
-            const response = await authApi.register(formData.email, formData.password, formData.name);
+            if (isAdmin) {
+                // Admin registration - no OTP needed
+                await authApi.adminRegister(formData.name, formData.email, formData.password);
+                toast.success('Admin account created successfully! Please login.');
+                navigate('/login');
+            } else {
+                // User registration - requires OTP
+                const response = await authApi.register(formData.email, formData.password, formData.name);
 
-            // Store token in localStorage so subsequent auth requests (like sendOtp) succeed
-            if (response && (response.token || response.accessToken)) {
-                localStorage.setItem('auth_token', response.token || response.accessToken);
+                // Store token in localStorage so subsequent auth requests (like sendOtp) succeed
+                if (response && (response.token || response.accessToken)) {
+                    localStorage.setItem('auth_token', response.token || response.accessToken);
+                }
+
+                // Send OTP to email
+                await authApi.sendOtp(formData.email);
+                setOtpData({ email: formData.email, otp: '' });
+                setStep('otp');
+                toast.success('Registration successful! Please check your email for OTP.');
             }
-
-            // Send OTP to email
-            await authApi.sendOtp(formData.email);
-            setOtpData({ email: formData.email, otp: '' });
-            setStep('otp');
-            toast.success('Registration successful! Please check your email for OTP.');
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Registration failed. Please try again.');
         } finally {
@@ -189,7 +198,7 @@ const Register = () => {
     }
 
     return (
-        <div className="min-h-screen flex bg-white dark:bg-gray-900">
+        <div className="min-h-screen flex bg-white">
             {/* Left Side - Image */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
                 <img 
@@ -202,8 +211,14 @@ const Register = () => {
                 <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
                     <div className="max-w-md">
                         <div className="mb-8">
-                            <h1 className="text-5xl font-bold mb-4">Join AAKT</h1>
-                            <p className="text-xl text-blue-100">Create your account and start managing your business efficiently</p>
+                            <h1 className="text-5xl font-bold mb-4">
+                                {isAdmin ? 'Admin Portal' : 'Join AAKT'}
+                            </h1>
+                            <p className="text-xl text-blue-100">
+                                {isAdmin 
+                                    ? 'Create admin account to manage the platform' 
+                                    : 'Create your account and start managing your business efficiently'}
+                            </p>
                         </div>
                         
                         <div className="space-y-4">
@@ -240,14 +255,46 @@ const Register = () => {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
                 <div className="w-full max-w-md">
                     <div className="mb-8">
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h2>
-                        <p className="text-gray-600 dark:text-gray-400">Join AAKT and start managing your business</p>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                            {isAdmin ? 'Create Admin Account' : 'Create Account'}
+                        </h2>
+                        <p className="text-gray-600">
+                            {isAdmin ? 'Register with admin credentials' : 'Join AAKT and start managing your business'}
+                        </p>
+                    </div>
+
+                    {/* Toggle Switch */}
+                    <div className="mb-8 p-1 bg-gray-100 rounded-xl">
+                        <div className="grid grid-cols-2 gap-1">
+                            <button
+                                type="button"
+                                onClick={() => setIsAdmin(false)}
+                                className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                                    !isAdmin 
+                                        ? 'bg-white text-gray-900 shadow-sm' 
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                                User Register
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsAdmin(true)}
+                                className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                                    isAdmin 
+                                        ? 'bg-white text-gray-900 shadow-sm' 
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                                Admin Register
+                            </button>
+                        </div>
                     </div>
 
                     <form onSubmit={handleRegister} className="space-y-5">
                         {/* Name */}
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-2">
                                 Full Name
                             </label>
                             <div className="relative">
@@ -258,15 +305,15 @@ const Register = () => {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
-                                    placeholder="John Doe"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder={isAdmin ? "Admin User" : "John Doe"}
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
 
                         {/* Email */}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
                                 Email Address
                             </label>
                             <div className="relative">
@@ -277,15 +324,15 @@ const Register = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    placeholder="you@example.com"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder={isAdmin ? "admin@example.com" : "you@example.com"}
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
 
                         {/* Password */}
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">
                                 Password
                             </label>
                             <div className="relative">
@@ -297,14 +344,14 @@ const Register = () => {
                                     value={formData.password}
                                     onChange={handleInputChange}
                                     placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
 
                         {/* Confirm Password */}
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 mb-2">
                                 Confirm Password
                             </label>
                             <div className="relative">
@@ -316,7 +363,7 @@ const Register = () => {
                                     value={formData.confirmPassword}
                                     onChange={handleInputChange}
                                     placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -332,23 +379,23 @@ const Register = () => {
                     </form>
 
                     {/* Login Link */}
-                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-center text-gray-600 dark:text-gray-400">
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                        <p className="text-center text-gray-600">
                             Already have an account?{' '}
-                            <Link to="/login" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold">
+                            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
                                 Sign in
                             </Link>
                         </p>
                     </div>
 
                     {/* Terms */}
-                    <p className="mt-6 text-center text-xs text-gray-600 dark:text-gray-400">
+                    <p className="mt-6 text-center text-xs text-gray-600">
                         By registering, you agree to our{' '}
-                        <a href="#" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold">
+                        <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
                             Terms of Service
                         </a>
                         {' '}and{' '}
-                        <a href="#" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold">
+                        <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
                             Privacy Policy
                         </a>
                     </p>

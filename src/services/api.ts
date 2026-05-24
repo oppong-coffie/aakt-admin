@@ -54,6 +54,12 @@ export const authApi = {
             body: JSON.stringify({ email, password }),
         }, false),
 
+    adminRegister: (fullName: string, email: string, password: string) =>
+        apiRequest('/admin/register', {
+            method: 'POST',
+            body: JSON.stringify({ fullName, email, password }),
+        }, false),
+
     verifyOtp: (otp: string) =>
         apiRequest('/auth/verify-otp', {
             method: 'POST',

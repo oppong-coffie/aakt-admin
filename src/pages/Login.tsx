@@ -50,7 +50,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex bg-white dark:bg-gray-900">
+        <div className="min-h-screen flex bg-white">
             {/* Left Side - Image/Branding */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
                 {/* Background Image */}
