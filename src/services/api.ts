@@ -345,6 +345,12 @@ export const adminApi = {
     getWorkloadTasks: (workloadId: string) =>
         apiRequest(`/workloads/${workloadId}/tasks`, { method: 'GET' }),
 
+    createWorkloadTask: (workloadId: string, data: { taskname: string }) =>
+        apiRequest(`/workloads/${workloadId}/tasks`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
     getWorkloadTask: (workloadId: string, taskId: string) =>
         apiRequest(`/workloads/${workloadId}/tasks/${taskId}`, { method: 'GET' }),
 

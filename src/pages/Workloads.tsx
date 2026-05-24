@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle, Circle, Archive, Eye, X } from 'lucide-react';
-import { adminApi, workloadsApi } from '../services/api';
+import { Plus, Trash2, Eye, X, Search } from 'lucide-react';
+import { adminApi } from '../services/api';
 
 interface Task {
     _id?: string;
@@ -14,7 +14,8 @@ interface Workload {
     _id?: string;
     id: string;
     name: string;
-    status: 'active' | 'inprogress' | 'archived';
+    workloadname?: string;
+    status: string;
     tasks: Task[];
     createdAt: string;
     updatedAt: string;
@@ -35,6 +36,7 @@ const Workloads = () => {
     const [workloadTasks, setWorkloadTasks] = useState<Task[]>([]);
     const [showWorkloadDetail, setShowWorkloadDetail] = useState(false);
     const [creating, setCreating] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchWorkloads();
@@ -44,7 +46,6 @@ const Workloads = () => {
         try {
             setLoading(true);
             setError('');
-            // Use admin API to get all workloads
             const data = await adminApi.getWorkloads();
             const workloadList = Array.isArray(data) ? data : (data.workloads || data.data || []);
             setWorkloads(workloadList);
@@ -79,53 +80,22 @@ const Workloads = () => {
         if (!confirm('Are you sure you want to delete this workload?')) return;
         try {
             await adminApi.deleteWorkload(id);
-            setWorkloads(workloads.filter(w => (w._id || w.id) !== id));
+            await fetchWorkloads();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete workload');
-        }
-    };
-
-    const handleArchiveWorkload = async (id: string) => {
-        try {
-            await workloadsApi.archive(id);
-            fetchWorkloads();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to archive workload');
         }
     };
 
     const handleAddTask = async () => {
         if (!newTaskName.trim() || !activeWorkloadId) return;
         try {
-            const taskData = { name: newTaskName, status: 'todo' };
-            const newTask = await workloadsApi.addTask(activeWorkloadId, taskData);
-            setWorkloads(workloads.map(w =>
-                w.id === activeWorkloadId ? { ...w, tasks: [...(w.tasks || []), newTask] } : w
-            ));
+            await adminApi.createWorkloadTask(activeWorkloadId, { taskname: newTaskName.trim() });
             setNewTaskName('');
             setShowNewTaskForm(false);
+            setActiveWorkloadId(null);
+            await fetchWorkloads();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to add task');
-        }
-    };
-
-    const handleCompleteTask = async (workloadId: string, taskId: string) => {
-        try {
-            await workloadsApi.completeTask(workloadId, taskId);
-            fetchWorkloads();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to complete task');
-        }
-    };
-
-    const handleDeleteTask = async (workloadId: string, taskId: string) => {
-        try {
-            await workloadsApi.removeTask(workloadId, taskId);
-            setWorkloads(workloads.map(w =>
-                w.id === workloadId ? { ...w, tasks: w.tasks.filter(t => t.id !== taskId) } : w
-            ));
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to delete task');
         }
     };
 
@@ -141,323 +111,318 @@ const Workloads = () => {
         }
     };
 
-    const handleUpdateTaskStatus = async (workloadId: string, taskId: string, status: string) => {
-        try {
-            await adminApi.updateWorkloadTaskStatus(workloadId, taskId, status);
-            // Refresh tasks
-            const tasks = await adminApi.getWorkloadTasks(workloadId);
-            setWorkloadTasks(Array.isArray(tasks) ? tasks : (tasks.tasks || []));
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to update task status');
-        }
-    };
-
     const closeWorkloadDetail = () => {
         setShowWorkloadDetail(false);
         setSelectedWorkload(null);
         setWorkloadTasks([]);
     };
 
-    if (loading) {
-        return (
-            <div className="p-8 bg-[#f4f5f9] min-h-full flex items-center justify-center">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading workloads...</p>
-                </div>
-            </div>
-        );
-    }
+    const filteredWorkloads = workloads.filter(w => {
+        const name = w.name || w.workloadname || '';
+        return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               (w.userId && w.userId.toLowerCase().includes(searchQuery.toLowerCase()));
+    });
 
     return (
         <div className="p-8 bg-[#f4f5f9] dark:bg-gray-900 min-h-full">
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Workloads</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your workloads and tasks</p>
+            <div className="mb-6">
+                <h1 className="text-[28px] font-semibold text-gray-900 dark:text-white mb-6">Workloads</h1>
+                
+                {/* Top Bar */}
+                <div className="flex justify-between items-center mb-6">
+                    <div className="flex gap-4 items-center">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                            <input 
+                                type="text" 
+                                placeholder="search by name or user ID..." 
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-[260px] shadow-sm text-[14px] text-gray-800 dark:text-gray-200"
+                            />
+                        </div>
                     </div>
-                    <button
+
+                    <button 
                         onClick={() => setShowNewWorkloadForm(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                        className="flex items-center gap-2 bg-[#002df3] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[14px] font-medium transition-colors shadow-sm cursor-pointer"
                     >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="w-4 h-4" />
                         New Workload
                     </button>
                 </div>
+            </div>
 
-                {/* Error Message */}
-                {error && (
-                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg">
-                        {error}
+            {/* Error Message */}
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+                    {error}
+                </div>
+            )}
+
+            {/* Table Area */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm min-h-[500px]">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">All Workloads</h3>
+                
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
                     </div>
-                )}
-
-                {/* New Workload Modal */}
-                {showNewWorkloadForm && (
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md">
-                            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                                <div className="flex justify-between items-center">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Workload</h2>
-                                    <button
-                                        onClick={() => {
-                                            setShowNewWorkloadForm(false);
-                                            setNewWorkloadName('');
-                                            setNewWorkloadStatus('In Progress');
-                                        }}
-                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Workload Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newWorkloadName}
-                                        onChange={(e) => setNewWorkloadName(e.target.value)}
-                                        placeholder="e.g., Sprint 1 Workload"
-                                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Status
-                                    </label>
-                                    <select
-                                        value={newWorkloadStatus}
-                                        onChange={(e) => setNewWorkloadStatus(e.target.value)}
-                                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    >
-                                        <option value="In Progress">In Progress</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Completed">Completed</option>
-                                        <option value="On Hold">On Hold</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
-                                <button
-                                    onClick={handleCreateWorkload}
-                                    disabled={creating || !newWorkloadName.trim()}
-                                    className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white rounded-lg font-medium transition-colors cursor-pointer"
-                                >
-                                    {creating ? 'Creating...' : 'Create Workload'}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowNewWorkloadForm(false);
-                                        setNewWorkloadName('');
-                                        setNewWorkloadStatus('In Progress');
-                                    }}
-                                    className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+                ) : filteredWorkloads.length > 0 ? (
+                    <div className="w-full overflow-x-auto">
+                        {/* Table Header */}
+                        <div className="grid grid-cols-6 gap-4 pb-4 text-[13px] font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 min-w-[700px]">
+                            <div>Name</div>
+                            <div>Status</div>
+                            <div>Tasks</div>
+                            <div>User ID</div>
+                            <div>Created</div>
+                            <div className="text-right">Actions</div>
                         </div>
-                    </div>
-                )}
-
-                {/* Workloads List */}
-                {workloads.length === 0 ? (
-                    <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-                        <p className="text-gray-600 dark:text-gray-400">No workloads yet. Create one to get started!</p>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        {workloads.map((workload) => (
-                            <div key={workload.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                                {/* Workload Header */}
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{workload.name}</h2>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {workload.tasks?.length || 0} tasks
-                                            {workload.userId && ` • User: ${workload.userId}`}
-                                        </p>
+                        
+                        {/* Table Body */}
+                        <div className="flex flex-col min-w-[700px]">
+                            {filteredWorkloads.map((workload) => (
+                                <div 
+                                    key={workload._id || workload.id} 
+                                    className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 dark:text-gray-350 border-b border-gray-50 dark:border-gray-700/50 items-center hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors"
+                                >
+                                    <div className="font-medium text-gray-900 dark:text-white">
+                                        {workload.name || workload.workloadname || 'Untitled'}
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div>
+                                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium capitalize ${
+                                            workload.status === 'active' || workload.status === 'In Progress' 
+                                                ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                                : workload.status === 'archived'
+                                                ? 'bg-gray-50 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400'
+                                                : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                        }`}>
+                                            {workload.status}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Eye className="w-3.5 h-3.5 text-gray-400" />
+                                        {workload.tasks?.length || 0} tasks
+                                    </div>
+                                    <div className="font-mono text-[11px] text-blue-600 dark:text-blue-400">
+                                        {workload.userId || 'N/A'}
+                                    </div>
+                                    <div className="text-[11px] text-gray-500">
+                                        {workload.createdAt ? new Date(workload.createdAt).toLocaleDateString() : 'N/A'}
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={() => {
+                                                setActiveWorkloadId(workload._id || workload.id);
+                                                setNewTaskName('');
+                                                setShowNewTaskForm(true);
+                                            }}
+                                            className="p-2 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                                            title="Add Task"
+                                        >
+                                            <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                        </button>
                                         <button
                                             onClick={() => handleViewWorkload(workload)}
                                             className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                                             title="View Details"
                                         >
-                                            <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleArchiveWorkload(workload.id)}
-                                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                                            title="Archive"
-                                        >
-                                            <Archive className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                            <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                         </button>
                                         <button
                                             onClick={() => handleDeleteWorkload(workload._id || workload.id)}
                                             className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                             title="Delete"
                                         >
-                                            <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                                         </button>
                                     </div>
                                 </div>
-
-                                {/* Tasks */}
-                                <div className="space-y-2 mb-4">
-                                    {workload.tasks?.map((task) => (
-                                        <div key={task.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                            <button
-                                                onClick={() => handleCompleteTask(workload.id, task.id)}
-                                                className="flex-shrink-0"
-                                            >
-                                                {task.completed || task.status === 'completed' ? (
-                                                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                                                ) : (
-                                                    <Circle className="w-5 h-5 text-gray-400 dark:text-gray-600" />
-                                                )}
-                                            </button>
-                                            <span className={`flex-1 ${task.completed || task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
-                                                {task.name}
-                                            </span>
-                                            <button
-                                                onClick={() => handleDeleteTask(workload.id, task.id)}
-                                                className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Add Task Form */}
-                                {activeWorkloadId === workload.id && showNewTaskForm ? (
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={newTaskName}
-                                            onChange={(e) => setNewTaskName(e.target.value)}
-                                            placeholder="Enter task name..."
-                                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                        />
-                                        <button
-                                            onClick={handleAddTask}
-                                            className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-                                        >
-                                            Add
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setShowNewTaskForm(false);
-                                                setActiveWorkloadId(null);
-                                            }}
-                                            className="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => {
-                                            setActiveWorkloadId(workload.id);
-                                            setShowNewTaskForm(true);
-                                        }}
-                                        className="flex items-center gap-2 px-4 py-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg font-medium transition-colors"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Add Task
-                                    </button>
-                                )}
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <Eye className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-2" />
+                        <p className="text-gray-500 dark:text-gray-400">No workloads found.</p>
                     </div>
                 )}
             </div>
 
-            {/* Workload Detail Modal */}
-            {showWorkloadDetail && selectedWorkload && (
+            {/* Create Workload Modal */}
+            {showNewWorkloadForm && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedWorkload.name}</h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    Status: <span className="font-semibold capitalize">{selectedWorkload.status}</span>
-                                    {selectedWorkload.userId && ` • User: ${selectedWorkload.userId}`}
-                                </p>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Workload</h2>
+                                <button
+                                    onClick={() => {
+                                        setShowNewWorkloadForm(false);
+                                        setNewWorkloadName('');
+                                        setNewWorkloadStatus('In Progress');
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Workload Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newWorkloadName}
+                                    onChange={(e) => setNewWorkloadName(e.target.value)}
+                                    placeholder="e.g., Sprint 1 Workload"
+                                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Status
+                                </label>
+                                <select
+                                    value={newWorkloadStatus}
+                                    onChange={(e) => setNewWorkloadStatus(e.target.value)}
+                                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="On Hold">On Hold</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
                             <button
-                                onClick={closeWorkloadDetail}
-                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                onClick={handleCreateWorkload}
+                                disabled={creating || !newWorkloadName.trim()}
+                                className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white rounded-lg font-medium transition-colors cursor-pointer"
                             >
-                                <X className="w-6 h-6" />
+                                {creating ? 'Creating...' : 'Create Workload'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowNewWorkloadForm(false);
+                                    setNewWorkloadName('');
+                                    setNewWorkloadStatus('In Progress');
+                                }}
+                                className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors cursor-pointer"
+                            >
+                                Cancel
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
 
-                    <div className="p-6 overflow-y-auto max-h-[60vh]">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Tasks ({workloadTasks.length})
-                        </h3>
+            {/* Add Task Modal */}
+            {showNewTaskForm && activeWorkloadId && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add New Task</h2>
+                                <button
+                                    onClick={() => {
+                                        setShowNewTaskForm(false);
+                                        setActiveWorkloadId(null);
+                                        setNewTaskName('');
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
 
-                        {workloadTasks.length === 0 ? (
-                            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No tasks found</p>
-                        ) : (
+                        <div className="p-6">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Task Name
+                            </label>
+                            <input
+                                type="text"
+                                value={newTaskName}
+                                onChange={(e) => setNewTaskName(e.target.value)}
+                                placeholder="e.g., Complete documentation"
+                                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && newTaskName.trim()) {
+                                        handleAddTask();
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+                            <button
+                                onClick={handleAddTask}
+                                disabled={!newTaskName.trim()}
+                                className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                            >
+                                Add Task
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowNewTaskForm(false);
+                                    setActiveWorkloadId(null);
+                                    setNewTaskName('');
+                                }}
+                                className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Workload Detail Modal */}
+            {showWorkloadDetail && selectedWorkload && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Workload Details</h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        {selectedWorkload.name || selectedWorkload.workloadname}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={closeWorkloadDetail}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto max-h-[60vh]">
                             <div className="space-y-3">
                                 {workloadTasks.map((task) => (
-                                    <div key={task._id || task.id} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                    <div key={task._id || task.id} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                                         <div className="flex-1">
-                                            <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
-                                                {task.name}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
-                                                Status: {task.status}
-                                            </p>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            {task.status !== 'completed' && (
-                                                <button
-                                                    onClick={() => handleUpdateTaskStatus(selectedWorkload._id || selectedWorkload.id, task._id || task.id, 'completed')}
-                                                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
-                                                >
-                                                    Complete
-                                                </button>
-                                            )}
-                                            {task.status !== 'inprogress' && task.status !== 'completed' && (
-                                                <button
-                                                    onClick={() => handleUpdateTaskStatus(selectedWorkload._id || selectedWorkload.id, task._id || task.id, 'inprogress')}
-                                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors"
-                                                >
-                                                    In Progress
-                                                </button>
-                                            )}
-                                            {task.status !== 'todo' && (
-                                                <button
-                                                    onClick={() => handleUpdateTaskStatus(selectedWorkload._id || selectedWorkload.id, task._id || task.id, 'todo')}
-                                                    className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded-lg transition-colors"
-                                                >
-                                                    To Do
-                                                </button>
-                                            )}
+                                            <p className="font-medium text-gray-900 dark:text-white">{task.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">Status: {task.status}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
         </div>
     );
 };
