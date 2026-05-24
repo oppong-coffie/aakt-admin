@@ -110,24 +110,24 @@ const Login = () => {
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="mb-8">
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">
                             {isAdmin ? 'Admin Portal' : 'Welcome Back'}
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-gray-600">
                             {isAdmin ? 'Sign in with admin credentials' : 'Sign in to your account'}
                         </p>
                     </div>
 
                     {/* Toggle Switch */}
-                    <div className="mb-8 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                    <div className="mb-8 p-1 bg-gray-100 rounded-xl">
                         <div className="grid grid-cols-2 gap-1">
                             <button
                                 type="button"
                                 onClick={() => setIsAdmin(false)}
                                 className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                     !isAdmin 
-                                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                        ? 'bg-white text-gray-900 shadow-sm' 
+                                        : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
                                 User Login
@@ -137,8 +137,8 @@ const Login = () => {
                                 onClick={() => setIsAdmin(true)}
                                 className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                     isAdmin 
-                                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                        ? 'bg-white text-gray-900 shadow-sm' 
+                                        : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
                                 Admin Login
@@ -150,7 +150,7 @@ const Login = () => {
                     <form onSubmit={handleLogin} className="space-y-5">
                         {/* Email */}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
                                 Email Address
                             </label>
                             <input
@@ -160,13 +160,13 @@ const Login = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder={isAdmin ? "admin@example.com" : "you@example.com"}
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
 
                         {/* Password */}
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">
                                 Password
                             </label>
                             <input
@@ -176,7 +176,7 @@ const Login = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
 
@@ -185,11 +185,11 @@ const Login = () => {
                             <label className="flex items-center">
                                 <input
                                     type="checkbox"
-                                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                                 />
-                                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+                                <span className="ml-2 text-sm text-gray-600">Remember me</span>
                             </label>
-                            <a href="#" className="text-sm text-gray-900 hover:text-black dark:text-gray-300 dark:hover:text-white">
+                            <a href="#" className="text-sm text-gray-900 hover:text-black font-medium">
                                 Forgot password?
                             </a>
                         </div>
@@ -198,25 +198,25 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer"
+                            className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors mt-6 cursor-pointer"
                         >
                             {loading ? 'Signing in...' : (isAdmin ? 'Sign In as Admin' : 'Sign In')}
                         </button>
                     </form>
 
                     {/* Footer Links */}
-                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div className="mt-8 pt-6 border-t border-gray-200">
                         <div className="text-center space-y-3">
                             {!isAdmin && (
-                                <p className="text-gray-600 dark:text-gray-400">
+                                <p className="text-gray-600">
                                     Don't have an account?{' '}
-                                    <Link to="/register" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold">
+                                    <Link to="/register" className="text-gray-900 hover:text-black font-semibold">
                                         Sign up
                                     </Link>
                                 </p>
                             )}
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                <Link to="/landing" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold">
+                            <p className="text-sm text-gray-500">
+                                <Link to="/landing" className="text-gray-900 hover:text-black font-semibold">
                                     ← Back to home
                                 </Link>
                             </p>
