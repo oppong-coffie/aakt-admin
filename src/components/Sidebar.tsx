@@ -3,13 +3,16 @@ import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, Log
 
 const Sidebar = () => {
   const location = useLocation();
+  const isAdmin = localStorage.getItem('is_admin') === 'true';
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Workloads', path: '/workloads', icon: CheckSquare },
-    { name: 'Business', path: '/business', icon: Briefcase },
-    { name: 'Onboardings', path: '/onboardings', icon: UserPlus },
-    { name: 'Users', path: '/users', icon: Users },
+    ...(isAdmin ? [
+      { name: 'Workloads', path: '/workloads', icon: CheckSquare },
+      { name: 'Business', path: '/business', icon: Briefcase },
+      { name: 'Onboardings', path: '/onboardings', icon: UserPlus },
+      { name: 'Users', path: '/users', icon: Users },
+    ] : []),
     { name: 'Analytics', path: '/analytics', icon: BarChart2 },
     { name: 'Support', path: '/support', icon: HelpCircle },
   ];
@@ -57,11 +60,15 @@ const Sidebar = () => {
         <div className="px-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm">
-              JD
+              {isAdmin ? 'A' : 'JD'}
             </div>
             <div className="flex flex-col">
-              <span className="text-[13px] font-semibold text-gray-900 dark:text-white leading-none mb-1">John Doe</span>
-              <span className="text-[12px] text-gray-500 dark:text-gray-400 leading-none">Admin</span>
+              <span className="text-[13px] font-semibold text-gray-900 dark:text-white leading-none mb-1">
+                {isAdmin ? 'Admin' : 'John Doe'}
+              </span>
+              <span className="text-[12px] text-gray-500 dark:text-gray-400 leading-none">
+                {isAdmin ? 'Administrator' : 'User'}
+              </span>
             </div>
           </div>
         </div>
@@ -70,6 +77,8 @@ const Sidebar = () => {
             <button
               onClick={() => {
                 localStorage.removeItem('auth_token');
+                localStorage.removeItem('is_admin');
+                localStorage.removeItem('user_role');
                 window.location.href = '/landing';
               }}
               className="w-full flex items-center gap-3 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200"

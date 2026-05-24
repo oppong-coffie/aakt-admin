@@ -48,6 +48,12 @@ export const authApi = {
             body: JSON.stringify({ email, password }),
         }, false),
 
+    adminLogin: (email: string, password: string) =>
+        apiRequest('/admin/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+        }, false),
+
     verifyOtp: (otp: string) =>
         apiRequest('/auth/verify-otp', {
             method: 'POST',
@@ -324,6 +330,24 @@ export const adminApi = {
     getAllOnboardings: () =>
         apiRequest('/admin/onboardings', { method: 'GET' }),
 
+    createOnboarding: (data: {
+        country: string;
+        numberofbusinesses: number;
+        teamsize: string;
+        referralcode?: string;
+        otp?: number;
+        stage: string;
+        product: string;
+        strategy: string;
+        team: string;
+        finance: string;
+        growth: string;
+    }) =>
+        apiRequest('/onboarding', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
     getAllBusinesses: () =>
         apiRequest('/admin/businesses', { method: 'GET' }),
 
@@ -358,6 +382,12 @@ export const adminApi = {
         apiRequest(`/workloads/${workloadId}/tasks/${taskId}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
+        }),
+
+    updateWorkloadTaskName: (workloadId: string, taskId: string, taskname: string) =>
+        apiRequest(`/workloads/${workloadId}/tasks/${taskId}/name`, {
+            method: 'PATCH',
+            body: JSON.stringify({ taskname }),
         }),
 };
 

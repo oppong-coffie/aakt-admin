@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import { ToastProvider } from './components/Toast';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import Business from './pages/Business';
@@ -46,42 +47,44 @@ function PublicGuard({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Routes>
-      {/* Landing & Auth Pages (No Sidebar) */}
-      <Route path="/landing" element={<Landing />} />
-      <Route path="/login" element={<PublicGuard><Login /></PublicGuard>} />
-      <Route path="/register" element={<PublicGuard><Register /></PublicGuard>} />
+    <ToastProvider>
+      <Routes>
+        {/* Landing & Auth Pages (No Sidebar) */}
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/login" element={<PublicGuard><Login /></PublicGuard>} />
+        <Route path="/register" element={<PublicGuard><Register /></PublicGuard>} />
 
-      {/* Dashboard Pages (With Sidebar) */}
-      <Route
-        path="/*"
-        element={
-          <AuthGuard>
-            <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-              {/* START:: Sidebar */}
-              <Sidebar />
-              {/* END:: Sidebar */}
+        {/* Dashboard Pages (With Sidebar) */}
+        <Route
+          path="/*"
+          element={
+            <AuthGuard>
+              <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+                {/* START:: Sidebar */}
+                <Sidebar />
+                {/* END:: Sidebar */}
 
-              {/* START:: Main */}
-              <main className="flex-1 w-full overflow-x-hidden overflow-y-auto">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/workloads" element={<Workloads />} />
-                  <Route path="/business" element={<Business />} />
-                  <Route path="/business/:id" element={<BusinessDetails />} />
-                  <Route path="/onboardings" element={<Onboardings />} />
-                  <Route path="/users" element={<Users />} />
-                  <Route path="/support" element={<Support />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Routes>
-              </main>
-              {/* END:: Main */}
-            </div>
-          </AuthGuard>
-        }
-      />
-    </Routes>
+                {/* START:: Main */}
+                <main className="flex-1 w-full overflow-x-hidden overflow-y-auto">
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/workloads" element={<Workloads />} />
+                    <Route path="/business" element={<Business />} />
+                    <Route path="/business/:id" element={<BusinessDetails />} />
+                    <Route path="/onboardings" element={<Onboardings />} />
+                    <Route path="/users" element={<Users />} />
+                    <Route path="/support" element={<Support />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                </main>
+                {/* END:: Main */}
+              </div>
+            </AuthGuard>
+          }
+        />
+      </Routes>
+    </ToastProvider>
   );
 }
 

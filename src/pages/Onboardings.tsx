@@ -1,12 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Search, User } from 'lucide-react';
+import { Search, User, Plus, X } from 'lucide-react';
 import { adminApi } from '../services/api';
+import { toast } from '../components/Toast';
 
 const Onboardings = () => {
   const [onboardings, setOnboardings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [formData, setFormData] = useState({
+    country: '',
+    numberofbusinesses: 1,
+    teamsize: '1-10',
+    referralcode: '',
+    otp: 1,
+    stage: 'Idea',
+    product: '',
+    strategy: '',
+    team: '',
+    finance: '',
+    growth: ''
+  });
 
   useEffect(() => {
     const fetchOnboardings = async () => {
@@ -45,23 +61,69 @@ const Onboardings = () => {
            stage.toLowerCase().includes(query);
   });
 
+  const handleCreateOnboarding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.country || !formData.stage || !formData.product) {
+      toast.error('Please fill in required fields (Country, Stage, Product)');
+      return;
+    }
+
+    try {
+      setCreating(true);
+      await adminApi.createOnboarding(formData);
+      toast.success('Onboarding created successfully');
+      setShowCreateModal(false);
+      setFormData({
+        country: '',
+        numberofbusinesses: 1,
+        teamsize: '1-10',
+        referralcode: '',
+        otp: 1,
+        stage: 'Idea',
+        product: '',
+        strategy: '',
+        team: '',
+        finance: '',
+        growth: ''
+      });
+      // Refresh list
+      const res = await adminApi.getAllOnboardings();
+      const list = Array.isArray(res) ? res : (res as any).onboardings || (res as any).data || [];
+      setOnboardings(list);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to create onboarding');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="p-8 bg-[#f4f5f9] dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
         <h1 className="text-[28px] font-semibold text-gray-900 dark:text-white mb-6">Onboardings</h1>
         
-        {/* Search Bar */}
-        <div className="flex gap-4 items-center mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-            <input 
-              type="text" 
-              placeholder="search by user ID, country, or stage..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-[320px] shadow-sm text-[14px] text-gray-800 dark:text-gray-200"
-            />
+        {/* Top Bar */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-4 items-center">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+              <input 
+                type="text" 
+                placeholder="search by user ID, country, or stage..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-[320px] shadow-sm text-[14px] text-gray-800 dark:text-gray-200"
+              />
+            </div>
           </div>
+
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-[#002df3] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[14px] font-medium transition-colors shadow-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            Create Onboarding
+          </button>
         </div>
       </div>
 
@@ -123,6 +185,185 @@ const Onboardings = () => {
           </div>
         )}
       </div>
+
+      {/* Create Onboarding Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Onboarding</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              <form onSubmit={handleCreateOnboarding}>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Country *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.country}
+                    onChange={(e) => setFormData({...formData, country: e.target.value})}
+                    placeholder="USA"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Stage *
+                  </label>
+                  <select
+                    value={formData.stage}
+                    onChange={(e) => setFormData({...formData, stage: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Idea">Idea</option>
+                    <option value="Seed">Seed</option>
+                    <option value="Growth">Growth</option>
+                    <option value="Scale">Scale</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Product *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.product}
+                    onChange={(e) => setFormData({...formData, product: e.target.value})}
+                    placeholder="SaaS Platform"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Team Size
+                  </label>
+                  <select
+                    value={formData.teamsize}
+                    onChange={(e) => setFormData({...formData, teamsize: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="1-10">1-10</option>
+                    <option value="10-50">10-50</option>
+                    <option value="50-100">50-100</option>
+                    <option value="100+">100+</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Number of Businesses
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.numberofbusinesses}
+                    onChange={(e) => setFormData({...formData, numberofbusinesses: parseInt(e.target.value)})}
+                    min="1"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Strategy
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.strategy}
+                    onChange={(e) => setFormData({...formData, strategy: e.target.value})}
+                    placeholder="B2B"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Team
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.team}
+                    onChange={(e) => setFormData({...formData, team: e.target.value})}
+                    placeholder="In-house"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Finance
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.finance}
+                    onChange={(e) => setFormData({...formData, finance: e.target.value})}
+                    placeholder="Bootstrap"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Growth Focus
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.growth}
+                    onChange={(e) => setFormData({...formData, growth: e.target.value})}
+                    placeholder="High"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Referral Code
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.referralcode}
+                    onChange={(e) => setFormData({...formData, referralcode: e.target.value})}
+                    placeholder="REF123"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              </form>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+              <button
+                onClick={handleCreateOnboarding}
+                disabled={creating}
+                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors cursor-pointer"
+              >
+                {creating ? 'Creating...' : 'Create Onboarding'}
+              </button>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

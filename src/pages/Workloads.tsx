@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Eye, X, Search } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Eye, X, Search, MoreHorizontal, Edit2 } from 'lucide-react';
 import { adminApi } from '../services/api';
+import { toast } from '../components/Toast';
 
 interface Task {
     _id?: string;
@@ -25,7 +26,6 @@ interface Workload {
 const Workloads = () => {
     const [workloads, setWorkloads] = useState<Workload[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [newWorkloadName, setNewWorkloadName] = useState('');
     const [newWorkloadStatus, setNewWorkloadStatus] = useState('In Progress');
     const [newTaskName, setNewTaskName] = useState('');
@@ -37,6 +37,20 @@ const Workloads = () => {
     const [showWorkloadDetail, setShowWorkloadDetail] = useState(false);
     const [creating, setCreating] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+    const [editingTaskName, setEditingTaskName] = useState('');
+    const [activeActionRow, setActiveActionRow] = useState<string | null>(null);
+    const actionRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (actionRef.current && !actionRef.current.contains(event.target as Node)) {
+                setActiveActionRow(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         fetchWorkloads();
@@ -45,12 +59,11 @@ const Workloads = () => {
     const fetchWorkloads = async () => {
         try {
             setLoading(true);
-            setError('');
             const data = await adminApi.getWorkloads();
             const workloadList = Array.isArray(data) ? data : (data.workloads || data.data || []);
             setWorkloads(workloadList);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch workloads');
+            toast.error(err instanceof Error ? err.message : 'Failed to fetch workloads');
         } finally {
             setLoading(false);
         }
@@ -68,9 +81,10 @@ const Workloads = () => {
             setNewWorkloadName('');
             setNewWorkloadStatus('In Progress');
             setShowNewWorkloadForm(false);
+            toast.success('Workload created successfully');
             await fetchWorkloads();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to create workload');
+            toast.error(err instanceof Error ? err.message : 'Failed to create workload');
         } finally {
             setCreating(false);
         }
@@ -80,9 +94,10 @@ const Workloads = () => {
         if (!confirm('Are you sure you want to delete this workload?')) return;
         try {
             await adminApi.deleteWorkload(id);
+            toast.success('Workload deleted successfully');
             await fetchWorkloads();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to delete workload');
+            toast.error(err instanceof Error ? err.message : 'Failed to delete workload');
         }
     };
 
@@ -93,9 +108,10 @@ const Workloads = () => {
             setNewTaskName('');
             setShowNewTaskForm(false);
             setActiveWorkloadId(null);
+            toast.success('Task added successfully');
             await fetchWorkloads();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add task');
+            toast.error(err instanceof Error ? err.message : 'Failed to add task');
         }
     };
 
@@ -107,7 +123,7 @@ const Workloads = () => {
             setWorkloadTasks(Array.isArray(tasks) ? tasks : (tasks.tasks || []));
             setShowWorkloadDetail(true);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch workload tasks');
+            toast.error(err instanceof Error ? err.message : 'Failed to fetch workload tasks');
         }
     };
 
@@ -115,6 +131,33 @@ const Workloads = () => {
         setShowWorkloadDetail(false);
         setSelectedWorkload(null);
         setWorkloadTasks([]);
+        setEditingTaskId(null);
+        setEditingTaskName('');
+    };
+
+    const handleEditTaskName = async (workloadId: string, taskId: string) => {
+        if (!editingTaskName.trim()) return;
+        try {
+            await adminApi.updateWorkloadTaskName(workloadId, taskId, editingTaskName.trim());
+            toast.success('Task name updated successfully');
+            setEditingTaskId(null);
+            setEditingTaskName('');
+            // Refresh tasks
+            const tasks = await adminApi.getWorkloadTasks(workloadId);
+            setWorkloadTasks(Array.isArray(tasks) ? tasks : (tasks.tasks || []));
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to update task name');
+        }
+    };
+
+    const startEditingTask = (task: Task) => {
+        setEditingTaskId(task._id || task.id);
+        setEditingTaskName(task.name);
+    };
+
+    const cancelEditingTask = () => {
+        setEditingTaskId(null);
+        setEditingTaskName('');
     };
 
     const filteredWorkloads = workloads.filter(w => {
@@ -153,15 +196,8 @@ const Workloads = () => {
                 </div>
             </div>
 
-            {/* Error Message */}
-            {error && (
-                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
-                    {error}
-                </div>
-            )}
-
             {/* Table Area */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm min-h-[500px]">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm min-h-[500px] overflow-visible">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">All Workloads</h3>
                 
                 {loading ? (
@@ -169,77 +205,105 @@ const Workloads = () => {
                         <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
                     </div>
                 ) : filteredWorkloads.length > 0 ? (
-                    <div className="w-full overflow-x-auto">
+                    <div className="w-full">
                         {/* Table Header */}
-                        <div className="grid grid-cols-6 gap-4 pb-4 text-[13px] font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 min-w-[700px]">
+                        <div className="grid grid-cols-8 gap-4 pb-4 text-[13px] font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 min-w-[900px]">
                             <div>Name</div>
                             <div>Status</div>
                             <div>Tasks</div>
                             <div>User ID</div>
                             <div>Created</div>
+                            <div>Updated</div>
                             <div className="text-right">Actions</div>
                         </div>
                         
                         {/* Table Body */}
-                        <div className="flex flex-col min-w-[700px]">
-                            {filteredWorkloads.map((workload) => (
-                                <div 
-                                    key={workload._id || workload.id} 
-                                    className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 dark:text-gray-350 border-b border-gray-50 dark:border-gray-700/50 items-center hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors"
-                                >
-                                    <div className="font-medium text-gray-900 dark:text-white">
-                                        {workload.name || workload.workloadname || 'Untitled'}
+                        <div className="flex flex-col min-w-[900px]">
+                            {filteredWorkloads.map((workload) => {
+                                const workloadId = workload._id || workload.id;
+                                return (
+                                    <div 
+                                        key={workloadId} 
+                                        className="grid grid-cols-8 gap-4 py-4 text-[13px] text-gray-600 dark:text-gray-350 border-b border-gray-50 dark:border-gray-700/50 items-center hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors relative"
+                                    >
+                                        <div className="font-medium text-gray-900 dark:text-white">
+                                            {workload.name || workload.workloadname || 'Untitled'}
+                                        </div>
+                                        <div>
+                                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium capitalize ${
+                                                workload.status === 'active' || workload.status === 'In Progress' 
+                                                    ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                                    : workload.status === 'archived'
+                                                    ? 'bg-gray-50 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400'
+                                                    : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                            }`}>
+                                                {workload.status}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Eye className="w-3.5 h-3.5 text-gray-400" />
+                                            {workload.tasks?.length || 0} tasks
+                                        </div>
+                                        <div className="font-mono text-[11px] text-blue-600 dark:text-blue-400">
+                                            {workload.userId || 'N/A'}
+                                        </div>
+                                        <div className="text-[11px] text-gray-500">
+                                            {workload.createdAt ? new Date(workload.createdAt).toLocaleDateString() : 'N/A'}
+                                        </div>
+                                        <div className="text-[11px] text-gray-500">
+                                            {workload.updatedAt ? new Date(workload.updatedAt).toLocaleDateString() : 'N/A'}
+                                        </div>
+                                        <div className="relative text-right">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveActionRow(activeActionRow === workloadId ? null : workloadId);
+                                                }}
+                                                className="inline-flex w-8 h-6 bg-[#002df3] text-white rounded-md items-center justify-center hover:bg-blue-700 cursor-pointer"
+                                            >
+                                                <MoreHorizontal className="w-4 h-4" />
+                                            </button>
+                                            
+                                            {activeActionRow === workloadId && (
+                                                <div ref={actionRef} className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-700 py-2 z-50 text-left">
+                                                    <button 
+                                                        onClick={() => {
+                                                            setActiveWorkloadId(workloadId);
+                                                            setNewTaskName('');
+                                                            setShowNewTaskForm(true);
+                                                            setActiveActionRow(null);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/20"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                        Add Task
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            handleViewWorkload(workload);
+                                                            setActiveActionRow(null);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                        View Details
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            handleDeleteWorkload(workloadId);
+                                                            setActiveActionRow(null);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Delete Workload
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium capitalize ${
-                                            workload.status === 'active' || workload.status === 'In Progress' 
-                                                ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                                                : workload.status === 'archived'
-                                                ? 'bg-gray-50 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400'
-                                                : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
-                                        }`}>
-                                            {workload.status}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Eye className="w-3.5 h-3.5 text-gray-400" />
-                                        {workload.tasks?.length || 0} tasks
-                                    </div>
-                                    <div className="font-mono text-[11px] text-blue-600 dark:text-blue-400">
-                                        {workload.userId || 'N/A'}
-                                    </div>
-                                    <div className="text-[11px] text-gray-500">
-                                        {workload.createdAt ? new Date(workload.createdAt).toLocaleDateString() : 'N/A'}
-                                    </div>
-                                    <div className="flex justify-end gap-2">
-                                        <button
-                                            onClick={() => {
-                                                setActiveWorkloadId(workload._id || workload.id);
-                                                setNewTaskName('');
-                                                setShowNewTaskForm(true);
-                                            }}
-                                            className="p-2 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                                            title="Add Task"
-                                        >
-                                            <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleViewWorkload(workload)}
-                                            className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                            title="View Details"
-                                        >
-                                            <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteWorkload(workload._id || workload.id)}
-                                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                            title="Delete"
-                                        >
-                                            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 ) : (
@@ -410,14 +474,61 @@ const Workloads = () => {
 
                         <div className="p-6 overflow-y-auto max-h-[60vh]">
                             <div className="space-y-3">
-                                {workloadTasks.map((task) => (
-                                    <div key={task._id || task.id} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                        <div className="flex-1">
-                                            <p className="font-medium text-gray-900 dark:text-white">{task.name}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">Status: {task.status}</p>
+                                {workloadTasks.map((task) => {
+                                    const taskId = task._id || task.id;
+                                    const isEditing = editingTaskId === taskId;
+                                    
+                                    return (
+                                        <div key={taskId} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                            {isEditing ? (
+                                                <div className="flex-1 flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={editingTaskName}
+                                                        onChange={(e) => setEditingTaskName(e.target.value)}
+                                                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                        autoFocus
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                handleEditTaskName(selectedWorkload._id || selectedWorkload.id, taskId);
+                                                            } else if (e.key === 'Escape') {
+                                                                cancelEditingTask();
+                                                            }
+                                                        }}
+                                                    />
+                                                    <button
+                                                        onClick={() => handleEditTaskName(selectedWorkload._id || selectedWorkload.id, taskId)}
+                                                        className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                    <button
+                                                        onClick={cancelEditingTask}
+                                                        className="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg text-sm font-medium transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-gray-900 dark:text-white">{task.name}</p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">Status: {task.status}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => startEditingTask(task)}
+                                                        className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                        title="Edit task name"
+                                                    >
+                                                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
