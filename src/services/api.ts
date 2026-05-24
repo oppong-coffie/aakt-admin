@@ -328,22 +328,28 @@ export const adminApi = {
         apiRequest('/admin/businesses', { method: 'GET' }),
 
     getWorkloads: () =>
-        apiRequest('/admin/workloads', { method: 'GET' }),
+        apiRequest('/workloads', { method: 'GET' }),
+
+    createWorkload: (data: { workloadname: string; status: string; name?: string }) =>
+        apiRequest('/workloads', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
 
     getWorkloadById: (id: string) =>
-        apiRequest(`/admin/workloads/${id}`, { method: 'GET' }),
+        apiRequest(`/workloads/${id}`, { method: 'GET' }),
 
     deleteWorkload: (id: string) =>
-        apiRequest(`/admin/workloads/${id}`, { method: 'DELETE' }),
+        apiRequest(`/workloads/${id}`, { method: 'DELETE' }),
 
     getWorkloadTasks: (workloadId: string) =>
-        apiRequest(`/admin/workloads/${workloadId}/tasks`, { method: 'GET' }),
+        apiRequest(`/workloads/${workloadId}/tasks`, { method: 'GET' }),
 
     getWorkloadTask: (workloadId: string, taskId: string) =>
-        apiRequest(`/admin/workloads/${workloadId}/tasks/${taskId}`, { method: 'GET' }),
+        apiRequest(`/workloads/${workloadId}/tasks/${taskId}`, { method: 'GET' }),
 
     updateWorkloadTaskStatus: (workloadId: string, taskId: string, status: string) =>
-        apiRequest(`/admin/workloads/${workloadId}/tasks/${taskId}/status`, {
+        apiRequest(`/workloads/${workloadId}/tasks/${taskId}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
         }),

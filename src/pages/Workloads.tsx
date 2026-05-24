@@ -26,6 +26,7 @@ const Workloads = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [newWorkloadName, setNewWorkloadName] = useState('');
+    const [newWorkloadStatus, setNewWorkloadStatus] = useState('In Progress');
     const [newTaskName, setNewTaskName] = useState('');
     const [activeWorkloadId, setActiveWorkloadId] = useState<string | null>(null);
     const [showNewWorkloadForm, setShowNewWorkloadForm] = useState(false);
@@ -33,6 +34,7 @@ const Workloads = () => {
     const [selectedWorkload, setSelectedWorkload] = useState<Workload | null>(null);
     const [workloadTasks, setWorkloadTasks] = useState<Task[]>([]);
     const [showWorkloadDetail, setShowWorkloadDetail] = useState(false);
+    const [creating, setCreating] = useState(false);
 
     useEffect(() => {
         fetchWorkloads();
@@ -56,12 +58,20 @@ const Workloads = () => {
     const handleCreateWorkload = async () => {
         if (!newWorkloadName.trim()) return;
         try {
-            const newWorkload = await workloadsApi.create({ name: newWorkloadName, status: 'active' });
-            setWorkloads([...workloads, newWorkload]);
+            setCreating(true);
+            await adminApi.createWorkload({
+                workloadname: newWorkloadName.trim(),
+                status: newWorkloadStatus,
+                name: newWorkloadName.trim(),
+            });
             setNewWorkloadName('');
+            setNewWorkloadStatus('In Progress');
             setShowNewWorkloadForm(false);
+            await fetchWorkloads();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create workload');
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -184,29 +194,77 @@ const Workloads = () => {
                     </div>
                 )}
 
-                {/* New Workload Form */}
+                {/* New Workload Modal */}
                 {showNewWorkloadForm && (
-                    <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={newWorkloadName}
-                                onChange={(e) => setNewWorkloadName(e.target.value)}
-                                placeholder="Enter workload name..."
-                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
-                            <button
-                                onClick={handleCreateWorkload}
-                                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                                Create
-                            </button>
-                            <button
-                                onClick={() => setShowNewWorkloadForm(false)}
-                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
-                            >
-                                Cancel
-                            </button>
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md">
+                            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Workload</h2>
+                                    <button
+                                        onClick={() => {
+                                            setShowNewWorkloadForm(false);
+                                            setNewWorkloadName('');
+                                            setNewWorkloadStatus('In Progress');
+                                        }}
+                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Workload Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newWorkloadName}
+                                        onChange={(e) => setNewWorkloadName(e.target.value)}
+                                        placeholder="e.g., Sprint 1 Workload"
+                                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={newWorkloadStatus}
+                                        onChange={(e) => setNewWorkloadStatus(e.target.value)}
+                                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="On Hold">On Hold</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+                                <button
+                                    onClick={handleCreateWorkload}
+                                    disabled={creating || !newWorkloadName.trim()}
+                                    className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                                >
+                                    {creating ? 'Creating...' : 'Create Workload'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowNewWorkloadForm(false);
+                                        setNewWorkloadName('');
+                                        setNewWorkloadStatus('In Progress');
+                                    }}
+                                    className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
