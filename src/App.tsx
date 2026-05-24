@@ -15,6 +15,10 @@ import Landing from './pages/Landing';
 import Workloads from './pages/Workloads';
 import UserWorkloads from './pages/UserWorkloads';
 import Onboardings from './pages/Onboardings';
+import Portfolio from './pages/Portfolio';
+import Folders from './pages/Folders';
+import BusinessItems from './pages/BusinessItems';
+import BusinessDocuments from './pages/BusinessDocuments';
 
 // Redirect to login if token is missing
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -73,6 +77,10 @@ function App() {
                     <Route path="/workloads" element={<Workloads />} />
                     <Route path="/my-workloads" element={<UserWorkloads />} />
                     <Route path="/business" element={<Business />} />
+                    <Route path="/portfolio" element={<Portfolio />} />
+                    <Route path="/folders" element={<Folders />} />
+                    <Route path="/business-items" element={<BusinessItems />} />
+                    <Route path="/business-documents" element={<BusinessDocuments />} />
                     <Route path="/business/:id" element={<BusinessDetails />} />
                     <Route path="/onboardings" element={<Onboardings />} />
                     <Route path="/users" element={<Users />} />

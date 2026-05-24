@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, LogOut, CheckSquare, UserPlus } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, LogOut, CheckSquare, UserPlus, FolderOpen, FileText } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -17,6 +17,10 @@ const Sidebar = () => {
     ...(isAdmin ? [
       { name: 'Admin Workloads', path: '/workloads', icon: CheckSquare },
       { name: 'Business', path: '/business', icon: Briefcase },
+      { name: 'Portfolio', path: '/portfolio', icon: Briefcase },
+      { name: 'Folders', path: '/folders', icon: FolderOpen },
+      { name: 'Business Items', path: '/business-items', icon: CheckSquare },
+      { name: 'Documents', path: '/business-documents', icon: FileText },
       { name: 'Onboardings', path: '/onboardings', icon: UserPlus },
       { name: 'Users', path: '/users', icon: Users },
     ] : []),
