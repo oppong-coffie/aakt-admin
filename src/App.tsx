@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Landing from './pages/Landing';
 import Workloads from './pages/Workloads';
+import UserWorkloads from './pages/UserWorkloads';
 import Onboardings from './pages/Onboardings';
 
 // Redirect to login if token is missing
@@ -70,6 +71,7 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/workloads" element={<Workloads />} />
+                    <Route path="/my-workloads" element={<UserWorkloads />} />
                     <Route path="/business" element={<Business />} />
                     <Route path="/business/:id" element={<BusinessDetails />} />
                     <Route path="/onboardings" element={<Onboardings />} />

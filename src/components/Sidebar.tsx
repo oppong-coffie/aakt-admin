@@ -15,11 +15,12 @@ const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     ...(isAdmin ? [
-      { name: 'Workloads', path: '/workloads', icon: CheckSquare },
+      { name: 'Admin Workloads', path: '/workloads', icon: CheckSquare },
       { name: 'Business', path: '/business', icon: Briefcase },
       { name: 'Onboardings', path: '/onboardings', icon: UserPlus },
       { name: 'Users', path: '/users', icon: Users },
     ] : []),
+    { name: 'My Workloads', path: '/my-workloads', icon: CheckSquare },
     { name: 'Analytics', path: '/analytics', icon: BarChart2 },
     { name: 'Support', path: '/support', icon: HelpCircle },
   ];
