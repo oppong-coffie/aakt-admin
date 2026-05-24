@@ -6,7 +6,7 @@ const Landing = () => {
 
   return (
     <div 
-      className="h-screen w-screen overflow-hidden bg-gray-950 text-gray-100 font-sans relative flex flex-col justify-between"
+      className="h-screen w-screen overflow-hidden bg-gray-950 text-gray-100 relative flex flex-col justify-between"
       style={{
         backgroundImage: `linear-gradient(rgba(9, 11, 17, 0.75), rgba(9, 11, 17, 0.85)), url('/hero_bg.png')`,
         backgroundSize: 'cover',
