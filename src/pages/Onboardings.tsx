@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, User, Plus, X, Zap, TrendingUp } from 'lucide-react';
+import { Search, User, Plus, X, Zap, TrendingUp, MoreVertical } from 'lucide-react';
 import { adminApi, onboardingApi } from '../services/api';
 import { toast } from '../components/Toast';
 
@@ -12,6 +12,7 @@ const Onboardings = () => {
   const [creating, setCreating] = useState(false);
   const [showSkillsModal, setShowSkillsModal] = useState(false);
   const [showConfidenceModal, setShowConfidenceModal] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [confidenceData, setConfidenceData] = useState({
     capital: 0,
     influence: 0,
@@ -160,7 +161,7 @@ const Onboardings = () => {
   };
 
   return (
-    <div className="p-8 bg-white min-h-screen">
+    <div className="p-8 bg-white min-h-screen" onClick={() => setOpenMenuId(null)}>
       <div className="mb-6">
         <h1 className="text-[28px] font-semibold text-gray-900 mb-6">Onboardings</h1>
         
@@ -235,21 +236,44 @@ const Onboardings = () => {
                   <div className="text-[11px] text-gray-500">
                     {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A'}
                   </div>
-                  <div className="text-right">
+                  <div className="text-right relative">
                     <button
-                      onClick={() => handleAddSkills(o._id || o.userid)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-[12px] font-medium transition-colors cursor-pointer mr-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === (o._id || o.userid) ? null : (o._id || o.userid));
+                      }}
+                      className="inline-flex items-center justify-center w-8 h-8 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                     >
-                      <Zap className="w-3.5 h-3.5" />
-                      Add Skills
+                      <MoreVertical className="w-4 h-4 text-gray-600" />
                     </button>
-                    <button
-                      onClick={() => handleAddConfidence(o._id || o.userid)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg text-[12px] font-medium transition-colors cursor-pointer"
-                    >
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      Confidence
-                    </button>
+                    
+                    {openMenuId === (o._id || o.userid) && (
+                      <div 
+                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => {
+                            handleAddSkills(o._id || o.userid);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <Zap className="w-4 h-4 text-blue-600" />
+                          <span>Add Skills</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleAddConfidence(o._id || o.userid);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <TrendingUp className="w-4 h-4 text-purple-600" />
+                          <span>Add Confidence</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
