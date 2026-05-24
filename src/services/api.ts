@@ -151,6 +151,26 @@ export const portfolioApi = {
     getAllBusinesses: () =>
         apiRequest('/business', { method: 'GET' }),
 
+    // Portfolio documents
+    createPortfolioDocument: (data: Record<string, unknown>) =>
+        apiRequest('/portfolio/documents', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    // Processes
+    createProcess: (data: Record<string, unknown>) =>
+        apiRequest('/portfolio/processes', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    getProcessesByPhaseId: (phaseId: string) =>
+        apiRequest(`/portfolio/processes/${phaseId}`, { method: 'GET' }),
+
+    getProcessesByBusinessId: (businessId: string) =>
+        apiRequest(`/portfolio/processes/all/${businessId}`, { method: 'GET' }),
+
     // Projects
     createProject: (data: Record<string, unknown>) =>
         apiRequest('/portfolio/projects', {
@@ -286,6 +306,18 @@ export const onboardingApi = {
 
 // ==================== ADMIN ====================
 export const adminApi = {
+    register: (email: string, password: string, name: string) =>
+        apiRequest('/admin/register', {
+            method: 'POST',
+            body: JSON.stringify({ email, password, fullName: name }),
+        }, false),
+
+    login: (email: string, password: string) =>
+        apiRequest('/admin/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+        }, false),
+
     getAllUsers: () =>
         apiRequest('/admin/users', { method: 'GET' }),
 
@@ -294,6 +326,27 @@ export const adminApi = {
 
     getAllBusinesses: () =>
         apiRequest('/admin/businesses', { method: 'GET' }),
+
+    getWorkloads: () =>
+        apiRequest('/admin/workloads', { method: 'GET' }),
+
+    getWorkloadById: (id: string) =>
+        apiRequest(`/admin/workloads/${id}`, { method: 'GET' }),
+
+    deleteWorkload: (id: string) =>
+        apiRequest(`/admin/workloads/${id}`, { method: 'DELETE' }),
+
+    getWorkloadTasks: (workloadId: string) =>
+        apiRequest(`/admin/workloads/${workloadId}/tasks`, { method: 'GET' }),
+
+    getWorkloadTask: (workloadId: string, taskId: string) =>
+        apiRequest(`/admin/workloads/${workloadId}/tasks/${taskId}`, { method: 'GET' }),
+
+    updateWorkloadTaskStatus: (workloadId: string, taskId: string, status: string) =>
+        apiRequest(`/admin/workloads/${workloadId}/tasks/${taskId}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status }),
+        }),
 };
 
 // ==================== HOME ====================

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, CheckCircle, Circle } from 'lucide-react';
-import { workloadsApi } from '../services/api';
+import { Plus, Trash2, CheckCircle, Circle, Archive, Eye, X } from 'lucide-react';
+import { adminApi, workloadsApi } from '../services/api';
 
 interface Task {
+    _id?: string;
     id: string;
     name: string;
     completed: boolean;
@@ -10,12 +11,14 @@ interface Task {
 }
 
 interface Workload {
+    _id?: string;
     id: string;
     name: string;
     status: 'active' | 'inprogress' | 'archived';
     tasks: Task[];
     createdAt: string;
     updatedAt: string;
+    userId?: string;
 }
 
 const Workloads = () => {
@@ -27,6 +30,9 @@ const Workloads = () => {
     const [activeWorkloadId, setActiveWorkloadId] = useState<string | null>(null);
     const [showNewWorkloadForm, setShowNewWorkloadForm] = useState(false);
     const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+    const [selectedWorkload, setSelectedWorkload] = useState<Workload | null>(null);
+    const [workloadTasks, setWorkloadTasks] = useState<Task[]>([]);
+    const [showWorkloadDetail, setShowWorkloadDetail] = useState(false);
 
     useEffect(() => {
         fetchWorkloads();
@@ -36,8 +42,10 @@ const Workloads = () => {
         try {
             setLoading(true);
             setError('');
-            const data = await workloadsApi.getByUserId();
-            setWorkloads(Array.isArray(data) ? data : data.workloads || []);
+            // Use admin API to get all workloads
+            const data = await adminApi.getWorkloads();
+            const workloadList = Array.isArray(data) ? data : (data.workloads || data.data || []);
+            setWorkloads(workloadList);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch workloads');
         } finally {
@@ -58,9 +66,10 @@ const Workloads = () => {
     };
 
     const handleDeleteWorkload = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this workload?')) return;
         try {
-            await workloadsApi.delete(id);
-            setWorkloads(workloads.filter(w => w.id !== id));
+            await adminApi.deleteWorkload(id);
+            setWorkloads(workloads.filter(w => (w._id || w.id) !== id));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete workload');
         }
@@ -108,6 +117,35 @@ const Workloads = () => {
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete task');
         }
+    };
+
+    const handleViewWorkload = async (workload: Workload) => {
+        try {
+            const workloadId = workload._id || workload.id;
+            const tasks = await adminApi.getWorkloadTasks(workloadId);
+            setSelectedWorkload(workload);
+            setWorkloadTasks(Array.isArray(tasks) ? tasks : (tasks.tasks || []));
+            setShowWorkloadDetail(true);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch workload tasks');
+        }
+    };
+
+    const handleUpdateTaskStatus = async (workloadId: string, taskId: string, status: string) => {
+        try {
+            await adminApi.updateWorkloadTaskStatus(workloadId, taskId, status);
+            // Refresh tasks
+            const tasks = await adminApi.getWorkloadTasks(workloadId);
+            setWorkloadTasks(Array.isArray(tasks) ? tasks : (tasks.tasks || []));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to update task status');
+        }
+    };
+
+    const closeWorkloadDetail = () => {
+        setShowWorkloadDetail(false);
+        setSelectedWorkload(null);
+        setWorkloadTasks([]);
     };
 
     if (loading) {
@@ -188,18 +226,26 @@ const Workloads = () => {
                                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">{workload.name}</h2>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
                                             {workload.tasks?.length || 0} tasks
+                                            {workload.userId && ` • User: ${workload.userId}`}
                                         </p>
                                     </div>
                                     <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleViewWorkload(workload)}
+                                            className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                            title="View Details"
+                                        >
+                                            <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                        </button>
                                         <button
                                             onClick={() => handleArchiveWorkload(workload.id)}
                                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                             title="Archive"
                                         >
-                                            <Edit2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                            <Archive className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteWorkload(workload.id)}
+                                            onClick={() => handleDeleteWorkload(workload._id || workload.id)}
                                             className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                             title="Delete"
                                         >
@@ -278,6 +324,82 @@ const Workloads = () => {
                     </div>
                 )}
             </div>
+
+            {/* Workload Detail Modal */}
+            {showWorkloadDetail && selectedWorkload && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedWorkload.name}</h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    Status: <span className="font-semibold capitalize">{selectedWorkload.status}</span>
+                                    {selectedWorkload.userId && ` • User: ${selectedWorkload.userId}`}
+                                </p>
+                            </div>
+                            <button
+                                onClick={closeWorkloadDetail}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="p-6 overflow-y-auto max-h-[60vh]">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Tasks ({workloadTasks.length})
+                        </h3>
+
+                        {workloadTasks.length === 0 ? (
+                            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No tasks found</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {workloadTasks.map((task) => (
+                                    <div key={task._id || task.id} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        <div className="flex-1">
+                                            <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                                                {task.name}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                                                Status: {task.status}
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {task.status !== 'completed' && (
+                                                <button
+                                                    onClick={() => handleUpdateTaskStatus(selectedWorkload._id || selectedWorkload.id, task._id || task.id, 'completed')}
+                                                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
+                                                >
+                                                    Complete
+                                                </button>
+                                            )}
+                                            {task.status !== 'inprogress' && task.status !== 'completed' && (
+                                                <button
+                                                    onClick={() => handleUpdateTaskStatus(selectedWorkload._id || selectedWorkload.id, task._id || task.id, 'inprogress')}
+                                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors"
+                                                >
+                                                    In Progress
+                                                </button>
+                                            )}
+                                            {task.status !== 'todo' && (
+                                                <button
+                                                    onClick={() => handleUpdateTaskStatus(selectedWorkload._id || selectedWorkload.id, task._id || task.id, 'todo')}
+                                                    className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded-lg transition-colors"
+                                                >
+                                                    To Do
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
         </div>
     );
 };

@@ -47,7 +47,7 @@ const Register = () => {
         setLoading(true);
         try {
             const response = await authApi.register(formData.email, formData.password, formData.name);
-            
+
             // Store token in localStorage so subsequent auth requests (like sendOtp) succeed
             if (response && (response.token || response.accessToken)) {
                 localStorage.setItem('auth_token', response.token || response.accessToken);
