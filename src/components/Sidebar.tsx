@@ -4,6 +4,13 @@ import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, Log
 const Sidebar = () => {
   const location = useLocation();
   const isAdmin = localStorage.getItem('is_admin') === 'true';
+  
+  // Get user info from localStorage
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+  const userName = user?.fullName || user?.name || localStorage.getItem('user_email') || 'User';
+  const userEmail = user?.email || localStorage.getItem('user_email') || '';
+  const userInitials = userName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -57,17 +64,17 @@ const Sidebar = () => {
           </li>
         </ul>
 
-        <div className="px-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl flex items-center justify-between">
+        <div className="px-3 py-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-600">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm">
-              {isAdmin ? 'A' : 'JD'}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-white font-bold text-sm shadow-lg">
+              {userInitials}
             </div>
-            <div className="flex flex-col">
-              <span className="text-[13px] font-semibold text-gray-900 dark:text-white leading-none mb-1">
-                {isAdmin ? 'Admin' : 'John Doe'}
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                {userName}
               </span>
-              <span className="text-[12px] text-gray-500 dark:text-gray-400 leading-none">
-                {isAdmin ? 'Administrator' : 'User'}
+              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {userEmail || (isAdmin ? 'Administrator' : 'User')}
               </span>
             </div>
           </div>

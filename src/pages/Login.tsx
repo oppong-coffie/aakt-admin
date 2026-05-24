@@ -27,6 +27,14 @@ const Login = () => {
                 localStorage.setItem('auth_token', response.accessToken);
             }
             
+            // Store user data
+            if (response.data) {
+                localStorage.setItem('user', JSON.stringify(response.data));
+                if (response.data.email) {
+                    localStorage.setItem('user_email', response.data.email);
+                }
+            }
+            
             // If admin login, check role
             if (isAdmin) {
                 // Check role from API response structure

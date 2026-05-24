@@ -60,6 +60,14 @@ const Register = () => {
                     localStorage.setItem('auth_token', response.token || response.accessToken);
                 }
 
+                // Store user data
+                if (response.data) {
+                    localStorage.setItem('user', JSON.stringify(response.data));
+                    if (response.data.email) {
+                        localStorage.setItem('user_email', response.data.email);
+                    }
+                }
+
                 // Send OTP to email
                 await authApi.sendOtp(formData.email);
                 setOtpData({ email: formData.email, otp: '' });
@@ -90,6 +98,14 @@ const Register = () => {
             }
             if (response.accessToken) {
                 localStorage.setItem('auth_token', response.accessToken);
+            }
+            
+            // Store user data
+            if (response.data) {
+                localStorage.setItem('user', JSON.stringify(response.data));
+                if (response.data.email) {
+                    localStorage.setItem('user_email', response.data.email);
+                }
             }
             toast.success('Email verified successfully!');
             // Navigate to dashboard
