@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, User, Plus, X } from 'lucide-react';
-import { adminApi } from '../services/api';
+import { Search, User, Plus, X, Zap } from 'lucide-react';
+import { adminApi, onboardingApi } from '../services/api';
 import { toast } from '../components/Toast';
 
 const Onboardings = () => {
@@ -10,6 +10,14 @@ const Onboardings = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [showSkillsModal, setShowSkillsModal] = useState(false);
+  const [selectedOnboardingId, setSelectedOnboardingId] = useState<string | null>(null);
+  const [skillsData, setSkillsData] = useState({
+    product: '',
+    strategy: '',
+    team: '',
+    finance: ''
+  });
   const [formData, setFormData] = useState({
     country: '',
     numberofbusinesses: 1,
@@ -97,6 +105,29 @@ const Onboardings = () => {
     }
   };
 
+  const handleAddSkills = async (onboardingId: string) => {
+    setSelectedOnboardingId(onboardingId);
+    setSkillsData({ product: '', strategy: '', team: '', finance: '' });
+    setShowSkillsModal(true);
+  };
+
+  const handleSubmitSkills = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!skillsData.product && !skillsData.strategy && !skillsData.team && !skillsData.finance) {
+      toast.error('Please fill at least one skill field');
+      return;
+    }
+
+    try {
+      await onboardingApi.updateSkills(skillsData);
+      toast.success('Skills added successfully');
+      setShowSkillsModal(false);
+      setSkillsData({ product: '', strategy: '', team: '', finance: '' });
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to add skills');
+    }
+  };
+
   return (
     <div className="p-8 bg-white min-h-screen">
       <div className="mb-6">
@@ -144,21 +175,22 @@ const Onboardings = () => {
         ) : filteredOnboardings.length > 0 ? (
           <div className="w-full overflow-x-auto">
             {/* Table Header */}
-            <div className="grid grid-cols-6 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[700px]">
+            <div className="grid grid-cols-7 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[800px]">
               <div>User ID</div>
               <div>Country</div>
               <div>Stage</div>
               <div>Team Size</div>
               <div>Businesses</div>
               <div>Created</div>
+              <div className="text-right">Actions</div>
             </div>
             
             {/* Table Body */}
-            <div className="flex flex-col min-w-[700px]">
+            <div className="flex flex-col min-w-[800px]">
               {filteredOnboardings.map((o: any, index: number) => (
                 <div 
                   key={o._id || o.userid || index} 
-                  className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors"
+                  className="grid grid-cols-7 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors"
                 >
                   <div className="font-mono text-[11px] text-blue-600">{o.userid || 'N/A'}</div>
                   <div>{o.country || 'N/A'}</div>
@@ -171,6 +203,15 @@ const Onboardings = () => {
                   <div>{o.numberofbusinesses || 0}</div>
                   <div className="text-[11px] text-gray-500">
                     {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A'}
+                  </div>
+                  <div className="text-right">
+                    <button
+                      onClick={() => handleAddSkills(o._id || o.userid)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-[12px] font-medium transition-colors cursor-pointer"
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      Add Skills
+                    </button>
                   </div>
                 </div>
               ))}
@@ -360,6 +401,97 @@ const Onboardings = () => {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Skills Modal */}
+      {showSkillsModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Add Skills</h2>
+                <button
+                  onClick={() => setShowSkillsModal(false)}
+                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <form onSubmit={handleSubmitSkills} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product
+                  </label>
+                  <input
+                    type="text"
+                    value={skillsData.product}
+                    onChange={(e) => setSkillsData({...skillsData, product: e.target.value})}
+                    placeholder="SaaS Platform"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Strategy
+                  </label>
+                  <input
+                    type="text"
+                    value={skillsData.strategy}
+                    onChange={(e) => setSkillsData({...skillsData, strategy: e.target.value})}
+                    placeholder="B2B"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Team
+                  </label>
+                  <input
+                    type="text"
+                    value={skillsData.team}
+                    onChange={(e) => setSkillsData({...skillsData, team: e.target.value})}
+                    placeholder="In-house"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Finance
+                  </label>
+                  <input
+                    type="text"
+                    value={skillsData.finance}
+                    onChange={(e) => setSkillsData({...skillsData, finance: e.target.value})}
+                    placeholder="Bootstrap"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                  >
+                    Add Skills
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSkillsModal(false)}
+                    className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

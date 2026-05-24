@@ -297,7 +297,7 @@ export const onboardingApi = {
             body: JSON.stringify(step),
         }),
 
-    updateSkills: (skills: string[]) =>
+    updateSkills: (skills: { product?: string; strategy?: string; team?: string; finance?: string }) =>
         apiRequest('/onboarding/skills', {
             method: 'POST',
             body: JSON.stringify({ skills }),
