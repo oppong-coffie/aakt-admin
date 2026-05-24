@@ -52,12 +52,15 @@ const Login = () => {
     return (
         <div className="min-h-screen flex bg-white dark:bg-gray-900">
             {/* Left Side - Image/Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 relative overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-                </div>
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+                {/* Background Image */}
+                <img 
+                    src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=800&fit=crop" 
+                    alt="Dashboard workspace" 
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-800/90"></div>
                 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
