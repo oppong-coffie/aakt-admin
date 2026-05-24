@@ -60,7 +60,7 @@ const Login = () => {
                     className="absolute inset-0 w-full h-full object-cover"
                 />
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-800/90"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 to-black/95"></div>
                 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
@@ -189,7 +189,7 @@ const Login = () => {
                                 />
                                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
                             </label>
-                            <a href="#" className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                            <a href="#" className="text-sm text-gray-900 hover:text-black dark:text-gray-300 dark:hover:text-white">
                                 Forgot password?
                             </a>
                         </div>
@@ -198,7 +198,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#002df3] hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer"
+                            className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer"
                         >
                             {loading ? 'Signing in...' : (isAdmin ? 'Sign In as Admin' : 'Sign In')}
                         </button>

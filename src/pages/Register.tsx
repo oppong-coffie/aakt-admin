@@ -117,7 +117,7 @@ const Register = () => {
                         alt="Workspace" 
                         className="absolute inset-0 w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-800/90"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 to-black/95"></div>
                     
                     <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
                         <div className="max-w-md">
@@ -156,7 +156,7 @@ const Register = () => {
                             <button
                                 type="submit"
                                 disabled={otpLoading}
-                                className="w-full bg-[#002df3] hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer"
+                                className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer"
                             >
                                 {otpLoading ? 'Verifying...' : 'Verify OTP'}
                             </button>
@@ -170,7 +170,7 @@ const Register = () => {
                                         setOtpLoading(true);
                                         authApi.sendOtp(otpData.email).finally(() => setOtpLoading(false));
                                     }}
-                                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold"
+                                    className="text-gray-900 hover:text-black font-semibold"
                                 >
                                     Resend OTP
                                 </button>
@@ -180,7 +180,7 @@ const Register = () => {
                         <div className="mt-8 space-y-3">
                             <button
                                 onClick={() => setStep('register')}
-                                className="w-full text-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold"
+                                className="w-full text-center text-gray-900 hover:text-black font-semibold"
                             >
                                 ← Back to Registration
                             </button>
@@ -206,7 +206,7 @@ const Register = () => {
                     alt="Workspace" 
                     className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-800/90"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 to-black/95"></div>
                 
                 <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
                     <div className="max-w-md">
@@ -372,7 +372,7 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#002df3] hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors mt-6 cursor-pointer"
+                            className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors mt-6 cursor-pointer"
                         >
                             {loading ? 'Creating account...' : 'Create Account'}
                         </button>
@@ -382,7 +382,7 @@ const Register = () => {
                     <div className="mt-8 pt-6 border-t border-gray-200">
                         <p className="text-center text-gray-600">
                             Already have an account?{' '}
-                            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+                            <Link to="/login" className="text-gray-900 hover:text-black font-semibold">
                                 Sign in
                             </Link>
                         </p>
@@ -391,11 +391,11 @@ const Register = () => {
                     {/* Terms */}
                     <p className="mt-6 text-center text-xs text-gray-600">
                         By registering, you agree to our{' '}
-                        <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
+                        <a href="#" className="text-gray-900 hover:text-black font-semibold">
                             Terms of Service
                         </a>
                         {' '}and{' '}
-                        <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
+                        <a href="#" className="text-gray-900 hover:text-black font-semibold">
                             Privacy Policy
                         </a>
                     </p>
