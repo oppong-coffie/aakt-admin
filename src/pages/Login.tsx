@@ -29,11 +29,11 @@ const Login = () => {
             
             // If admin login, check role
             if (isAdmin) {
-                // If admin login succeeds, they are an admin
-                const isAdminUser = response.role === 'admin' || 
+                // Check role from API response structure
+                const isAdminUser = response.data?.role === 'admin' || 
+                                   response.role === 'admin' || 
                                    response.isAdmin === true || 
-                                   response.is_admin === true ||
-                                   response.user?.role === 'admin';
+                                   response.is_admin === true;
                 
                 if (isAdminUser) {
                     localStorage.setItem('is_admin', 'true');
