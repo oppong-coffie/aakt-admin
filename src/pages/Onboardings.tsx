@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, User, Plus, X, Zap, TrendingUp, MoreVertical } from 'lucide-react';
+import { Search, User, Plus, X, Zap, TrendingUp, MoreVertical, ListTodo, Flag, Footprints } from 'lucide-react';
 import { adminApi, onboardingApi } from '../services/api';
 import { toast } from '../components/Toast';
 
@@ -13,6 +13,12 @@ const Onboardings = () => {
   const [showSkillsModal, setShowSkillsModal] = useState(false);
   const [showConfidenceModal, setShowConfidenceModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [showStageModal, setShowStageModal] = useState(false);
+  const [showStepModal, setShowStepModal] = useState(false);
+  const [showFeelingModal, setShowFeelingModal] = useState(false);
+  const [stageData, setStageData] = useState('');
+  const [stepData, setStepData] = useState('');
+  const [feelingData, setFeelingData] = useState<number[]>([0, 0, 0, 0]);
   const [confidenceData, setConfidenceData] = useState({
     capital: 0,
     influence: 0,
@@ -160,6 +166,75 @@ const Onboardings = () => {
     }
   };
 
+  const handleUpdateStage = async (onboardingId: string) => {
+    console.log('Updating stage for onboarding:', onboardingId);
+    setStageData('');
+    setShowStageModal(true);
+  };
+
+  const handleSubmitStage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stageData.trim()) {
+      toast.error('Please enter a stage');
+      return;
+    }
+
+    try {
+      await onboardingApi.updateStage(stageData);
+      toast.success('Stage updated successfully');
+      setShowStageModal(false);
+      setStageData('');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update stage');
+    }
+  };
+
+  const handleUpdateStep = async (onboardingId: string) => {
+    console.log('Updating step for onboarding:', onboardingId);
+    setStepData('');
+    setShowStepModal(true);
+  };
+
+  const handleSubmitStep = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stepData.trim()) {
+      toast.error('Please enter a step');
+      return;
+    }
+
+    try {
+      await onboardingApi.updateStep(stepData);
+      toast.success('Step updated successfully');
+      setShowStepModal(false);
+      setStepData('');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update step');
+    }
+  };
+
+  const handleUpdateFeeling = async (onboardingId: string) => {
+    console.log('Updating feeling for onboarding:', onboardingId);
+    setFeelingData([0, 0, 0, 0]);
+    setShowFeelingModal(true);
+  };
+
+  const handleSubmitFeeling = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (feelingData.every(val => val === 0)) {
+      toast.error('Please fill at least one feeling value');
+      return;
+    }
+
+    try {
+      await onboardingApi.updateFeeling(feelingData);
+      toast.success('Feeling updated successfully');
+      setShowFeelingModal(false);
+      setFeelingData([0, 0, 0, 0]);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update feeling');
+    }
+  };
+
   return (
     <div className="p-8 bg-white min-h-screen" onClick={() => setOpenMenuId(null)}>
       <div className="mb-6">
@@ -271,6 +346,36 @@ const Onboardings = () => {
                         >
                           <TrendingUp className="w-4 h-4 text-purple-600" />
                           <span>Add Confidence</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleUpdateStage(o._id || o.userid);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <Flag className="w-4 h-4 text-green-600" />
+                          <span>Update Stage</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleUpdateStep(o._id || o.userid);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <Footprints className="w-4 h-4 text-orange-600" />
+                          <span>Update Step</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleUpdateFeeling(o._id || o.userid);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <ListTodo className="w-4 h-4 text-pink-600" />
+                          <span>Update Feeling</span>
                         </button>
                       </div>
                     )}
@@ -664,6 +769,128 @@ const Onboardings = () => {
                     onClick={() => setShowConfidenceModal(false)}
                     className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
                   >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Stage Modal */}
+      {showStageModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Update Stage</h2>
+                <button onClick={() => setShowStageModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleSubmitStage} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Stage</label>
+                  <input
+                    type="text"
+                    value={stageData}
+                    onChange={(e) => setStageData(e.target.value)}
+                    placeholder="Registration"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button type="submit" className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
+                    Update Stage
+                  </button>
+                  <button type="button" onClick={() => setShowStageModal(false)} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Step Modal */}
+      {showStepModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Update Step</h2>
+                <button onClick={() => setShowStepModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleSubmitStep} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Step</label>
+                  <input
+                    type="text"
+                    value={stepData}
+                    onChange={(e) => setStepData(e.target.value)}
+                    placeholder="1"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button type="submit" className="flex-1 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
+                    Update Step
+                  </button>
+                  <button type="button" onClick={() => setShowStepModal(false)} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Feeling Modal */}
+      {showFeelingModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Update Feeling</h2>
+                <button onClick={() => setShowFeelingModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleSubmitFeeling} className="space-y-4">
+                {[0, 1, 2, 3].map((index) => (
+                  <div key={index}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Feeling {index + 1}</label>
+                    <input
+                      type="number"
+                      value={feelingData[index]}
+                      onChange={(e) => {
+                        const newData = [...feelingData];
+                        newData[index] = parseInt(e.target.value) || 0;
+                        setFeelingData(newData);
+                      }}
+                      placeholder="0"
+                      min="0"
+                      max="100"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    />
+                  </div>
+                ))}
+                <div className="flex gap-3 pt-4">
+                  <button type="submit" className="flex-1 px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
+                    Update Feeling
+                  </button>
+                  <button type="button" onClick={() => setShowFeelingModal(false)} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer">
                     Cancel
                   </button>
                 </div>

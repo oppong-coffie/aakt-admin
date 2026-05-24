@@ -291,10 +291,10 @@ export const onboardingApi = {
             body: JSON.stringify({ stage }),
         }),
 
-    updateStep: (step: Record<string, unknown>) =>
+    updateStep: (step: string) =>
         apiRequest('/onboarding/step', {
             method: 'POST',
-            body: JSON.stringify(step),
+            body: JSON.stringify({ step }),
         }),
 
     updateSkills: (skills: { product?: string; strategy?: string; team?: string; finance?: string }) =>
@@ -303,7 +303,7 @@ export const onboardingApi = {
             body: JSON.stringify({ skills }),
         }),
 
-    updateFeeling: (feeling: string) =>
+    updateFeeling: (feeling: number[]) =>
         apiRequest('/onboarding/feeling', {
             method: 'POST',
             body: JSON.stringify({ feeling }),
