@@ -221,8 +221,8 @@ const Users = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <User className="w-12 h-12 text-gray-300 dark:text-gray-650 mb-2" />
-            <p className="text-gray-500 dark:text-gray-400">No users found.</p>
+            <User className="w-12 h-12 text-gray-300 mb-2" />
+            <p className="text-gray-500">No users found.</p>
           </div>
         )}
       </div>
@@ -233,10 +233,10 @@ const Users = () => {
           
           {/* Create User Modal */}
           {modalState === 'create' && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative animate-in fade-in zoom-in duration-200">
               <form onSubmit={handleCreateUser} className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create New User</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Create New User</h3>
                   <button type="button" onClick={() => setModalState('none')} className="text-gray-400 hover:text-gray-600">
                     <X className="w-5 h-5" />
                   </button>
@@ -244,38 +244,38 @@ const Users = () => {
                 
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Full Name</label>
+                    <label className="text-[12px] font-bold text-gray-500">Full Name</label>
                     <input 
                       type="text" 
                       placeholder="John Doe" 
                       required
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-909 dark:text-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" 
+                      className="w-full px-4 py-3 bg-gray-100 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] text-gray-900" 
                     />
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Email Address</label>
+                    <label className="text-[12px] font-bold text-gray-500">Email Address</label>
                     <input 
                       type="email" 
                       placeholder="john@example.com" 
                       required
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 dark:text-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" 
+                      className="w-full px-4 py-3 bg-gray-100 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] text-gray-900" 
                     />
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[12px] font-bold text-gray-450 dark:text-gray-500">Initial Password</label>
+                    <label className="text-[12px] font-bold text-gray-500">Initial Password</label>
                     <input 
                       type="password" 
                       placeholder="••••••••" 
                       required
                       value={formData.password}
                       onChange={e => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 dark:text-white rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]" 
+                      className="w-full px-4 py-3 bg-gray-100 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] text-gray-900" 
                     />
                   </div>
                 </div>
@@ -293,12 +293,12 @@ const Users = () => {
 
           {/* Success Modal */}
           {modalState === 'success' && (
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl w-full max-w-sm overflow-hidden relative p-8 flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm overflow-hidden relative p-8 flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
               <div className="w-16 h-16 bg-[#d1f5d3] rounded-full flex items-center justify-center mb-6">
                 <Check className="w-8 h-8 text-green-600" />
               </div>
               
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 leading-snug">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 leading-snug">
                 You have created new<br/>user successfully
               </h3>
               
