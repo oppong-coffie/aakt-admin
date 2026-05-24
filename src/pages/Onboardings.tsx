@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, User, Plus, X, Zap } from 'lucide-react';
+import { Search, User, Plus, X, Zap, TrendingUp } from 'lucide-react';
 import { adminApi, onboardingApi } from '../services/api';
 import { toast } from '../components/Toast';
 
@@ -11,6 +11,14 @@ const Onboardings = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showSkillsModal, setShowSkillsModal] = useState(false);
+  const [showConfidenceModal, setShowConfidenceModal] = useState(false);
+  const [confidenceData, setConfidenceData] = useState({
+    capital: 0,
+    influence: 0,
+    intel: 0,
+    network: 0,
+    skillset: 0
+  });
   const [skillsData, setSkillsData] = useState({
     product: '',
     strategy: '',
@@ -127,6 +135,30 @@ const Onboardings = () => {
     }
   };
 
+  const handleAddConfidence = async (onboardingId: string) => {
+    console.log('Adding confidence for onboarding:', onboardingId);
+    setConfidenceData({ capital: 0, influence: 0, intel: 0, network: 0, skillset: 0 });
+    setShowConfidenceModal(true);
+  };
+
+  const handleSubmitConfidence = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (confidenceData.capital === 0 && confidenceData.influence === 0 && confidenceData.intel === 0 && 
+        confidenceData.network === 0 && confidenceData.skillset === 0) {
+      toast.error('Please fill at least one confidence field');
+      return;
+    }
+
+    try {
+      await onboardingApi.updateConfident(confidenceData);
+      toast.success('Confidence levels added successfully');
+      setShowConfidenceModal(false);
+      setConfidenceData({ capital: 0, influence: 0, intel: 0, network: 0, skillset: 0 });
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to add confidence levels');
+    }
+  };
+
   return (
     <div className="p-8 bg-white min-h-screen">
       <div className="mb-6">
@@ -206,10 +238,17 @@ const Onboardings = () => {
                   <div className="text-right">
                     <button
                       onClick={() => handleAddSkills(o._id || o.userid)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-[12px] font-medium transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-[12px] font-medium transition-colors cursor-pointer mr-2"
                     >
                       <Zap className="w-3.5 h-3.5" />
                       Add Skills
+                    </button>
+                    <button
+                      onClick={() => handleAddConfidence(o._id || o.userid)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg text-[12px] font-medium transition-colors cursor-pointer"
+                    >
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      Confidence
                     </button>
                   </div>
                 </div>
@@ -485,6 +524,120 @@ const Onboardings = () => {
                   <button
                     type="button"
                     onClick={() => setShowSkillsModal(false)}
+                    className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Confidence Modal */}
+      {showConfidenceModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Add Confidence Levels</h2>
+                <button
+                  onClick={() => setShowConfidenceModal(false)}
+                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <form onSubmit={handleSubmitConfidence} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Capital
+                  </label>
+                  <input
+                    type="number"
+                    value={confidenceData.capital}
+                    onChange={(e) => setConfidenceData({...confidenceData, capital: parseInt(e.target.value) || 0})}
+                    placeholder="10"
+                    min="0"
+                    max="100"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Influence
+                  </label>
+                  <input
+                    type="number"
+                    value={confidenceData.influence}
+                    onChange={(e) => setConfidenceData({...confidenceData, influence: parseInt(e.target.value) || 0})}
+                    placeholder="10"
+                    min="0"
+                    max="100"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Intel
+                  </label>
+                  <input
+                    type="number"
+                    value={confidenceData.intel}
+                    onChange={(e) => setConfidenceData({...confidenceData, intel: parseInt(e.target.value) || 0})}
+                    placeholder="10"
+                    min="0"
+                    max="100"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Network
+                  </label>
+                  <input
+                    type="number"
+                    value={confidenceData.network}
+                    onChange={(e) => setConfidenceData({...confidenceData, network: parseInt(e.target.value) || 0})}
+                    placeholder="24"
+                    min="0"
+                    max="100"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Skillset
+                  </label>
+                  <input
+                    type="number"
+                    value={confidenceData.skillset}
+                    onChange={(e) => setConfidenceData({...confidenceData, skillset: parseInt(e.target.value) || 0})}
+                    placeholder="38"
+                    min="0"
+                    max="100"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                  >
+                    Add Confidence
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfidenceModal(false)}
                     className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
                   >
                     Cancel

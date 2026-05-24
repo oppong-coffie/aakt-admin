@@ -309,7 +309,7 @@ export const onboardingApi = {
             body: JSON.stringify({ feeling }),
         }),
 
-    updateConfident: (confident: string) =>
+    updateConfident: (confident: { capital?: number; influence?: number; intel?: number; network?: number; skillset?: number }) =>
         apiRequest('/onboarding/confident', {
             method: 'POST',
             body: JSON.stringify({ confident }),
