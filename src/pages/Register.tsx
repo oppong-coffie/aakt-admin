@@ -117,12 +117,6 @@ const Register = () => {
         }
     };
 
-    const handleGoogleRegister = async () => {
-        // This would integrate with Google OAuth
-        // For now, showing a placeholder
-        toast.info('Google registration will be available soon');
-    };
-
     if (step === 'otp') {
         return (
             <div className="min-h-screen flex bg-white dark:bg-gray-900">

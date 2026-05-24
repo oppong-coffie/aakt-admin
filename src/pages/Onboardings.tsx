@@ -11,7 +11,6 @@ const Onboardings = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showSkillsModal, setShowSkillsModal] = useState(false);
-  const [selectedOnboardingId, setSelectedOnboardingId] = useState<string | null>(null);
   const [skillsData, setSkillsData] = useState({
     product: '',
     strategy: '',
@@ -106,7 +105,7 @@ const Onboardings = () => {
   };
 
   const handleAddSkills = async (onboardingId: string) => {
-    setSelectedOnboardingId(onboardingId);
+    console.log('Adding skills for onboarding:', onboardingId);
     setSkillsData({ product: '', strategy: '', team: '', finance: '' });
     setShowSkillsModal(true);
   };

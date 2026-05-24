@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Eye, X, Search, MoreHorizontal, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Eye, X, Search, MoreHorizontal } from 'lucide-react';
 import { adminApi } from '../services/api';
 import { toast } from '../components/Toast';
 
