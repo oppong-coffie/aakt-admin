@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, LogOut, CheckSquare, UserPlus, FolderOpen, FileText } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, LogOut, CheckSquare, UserPlus } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
