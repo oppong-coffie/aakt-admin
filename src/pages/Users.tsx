@@ -102,9 +102,9 @@ const Users = () => {
   });
 
   return (
-    <div className="p-8 bg-[#f4f5f9] dark:bg-gray-900 min-h-full">
+    <div className="p-8 bg-white min-h-full">
       <div className="mb-6">
-        <h1 className="text-[28px] font-semibold text-gray-900 dark:text-white mb-6">Users</h1>
+        <h1 className="text-[28px] font-semibold text-gray-900 mb-6">Users</h1>
         
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-6">
@@ -117,7 +117,7 @@ const Users = () => {
                 placeholder="search by name or email..." 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-[260px] shadow-sm text-[14px] text-gray-800 dark:text-gray-205"
+                className="pl-9 pr-4 py-2.5 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-[260px] shadow-sm text-[14px] text-gray-800"
               />
             </div>
             
@@ -125,7 +125,7 @@ const Users = () => {
             <div className="relative" ref={filterRef}>
               <button 
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2.5 rounded-xl shadow-sm text-gray-600 dark:text-gray-350 text-[14px] hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl shadow-sm text-gray-600 text-[14px] hover:bg-gray-50 border border-gray-200 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filter</span>
@@ -133,9 +133,9 @@ const Users = () => {
               </button>
               
               {isFilterOpen && (
-                <div className="absolute top-full left-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-10">
+                <div className="absolute top-full left-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-10">
                   {['Admin', 'User'].map((opt) => (
-                    <button key={opt} className="w-full text-left px-4 py-2 text-[13px] text-gray-750 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600">
+                    <button key={opt} className="w-full text-left px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-blue-600">
                       {opt}
                     </button>
                   ))}
@@ -155,17 +155,17 @@ const Users = () => {
       </div>
 
       {/* Table Area */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm min-h-[500px]">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">List of users</h3>
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 min-h-[500px]">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">List of users</h3>
         
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-blue-650 animate-spin"></div>
+            <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
           </div>
         ) : filteredUsers.length > 0 ? (
           <div className="w-full overflow-x-auto">
             {/* Table Header */}
-            <div className="grid grid-cols-5 gap-4 pb-4 text-[13px] font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 min-w-[600px]">
+            <div className="grid grid-cols-5 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[600px]">
               <div>Name</div>
               <div>Email</div>
               <div>Role</div>
@@ -176,17 +176,17 @@ const Users = () => {
             {/* Table Body */}
             <div className="flex flex-col min-w-[600px]">
               {filteredUsers.map((u) => (
-                <div key={u._id} className="grid grid-cols-5 gap-4 py-4 text-[13px] text-gray-650 dark:text-gray-350 border-b border-gray-50 dark:border-gray-700/50 relative items-center hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
-                  <div className="font-semibold text-gray-905 dark:text-white flex items-center gap-2">
-                    <User className="w-4 h-4 text-purple-500" />
+                <div key={u._id} className="grid grid-cols-5 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-100 relative items-center hover:bg-gray-50 transition-colors">
+                  <div className="font-semibold text-gray-900 flex items-center gap-2">
+                    <User className="w-4 h-4 text-blue-500" />
                     {u.fullName || u.name || 'N/A'}
                   </div>
                   <div>{u.email}</div>
                   <div className="capitalize">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                       u.role === 'admin' 
-                        ? 'bg-purple-50 text-purple-650 dark:bg-purple-950/20 dark:text-purple-400' 
-                        : 'bg-blue-50 text-blue-650 dark:bg-blue-950/20 dark:text-blue-400'
+                        ? 'bg-purple-50 text-purple-600' 
+                        : 'bg-blue-50 text-blue-600'
                     }`}>
                       {u.role || 'user'}
                     </span>
@@ -204,10 +204,10 @@ const Users = () => {
                     </button>
                     
                     {activeActionRow === u._id && (
-                      <div ref={actionRef} className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-700 py-2 z-20 text-left">
+                      <div ref={actionRef} className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-20 text-left">
                         <button 
                           onClick={() => handleDeleteUser(u._id)}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-650 hover:bg-red-50 hover:text-red-750 dark:hover:bg-red-950/20"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-600 hover:bg-red-50 hover:text-red-700"
                         >
                           <Ban className="w-4 h-4 text-red-400" />
                           Delete User

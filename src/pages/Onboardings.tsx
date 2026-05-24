@@ -98,9 +98,9 @@ const Onboardings = () => {
   };
 
   return (
-    <div className="p-8 bg-[#f4f5f9] dark:bg-gray-900 min-h-screen">
+    <div className="p-8 bg-white min-h-screen">
       <div className="mb-6">
-        <h1 className="text-[28px] font-semibold text-gray-900 dark:text-white mb-6">Onboardings</h1>
+        <h1 className="text-[28px] font-semibold text-gray-900 mb-6">Onboardings</h1>
         
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-6">
@@ -112,7 +112,7 @@ const Onboardings = () => {
                 placeholder="search by user ID, country, or stage..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-[320px] shadow-sm text-[14px] text-gray-800 dark:text-gray-200"
+                className="pl-9 pr-4 py-2.5 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-[320px] shadow-sm text-[14px] text-gray-800"
               />
             </div>
           </div>
@@ -128,11 +128,11 @@ const Onboardings = () => {
       </div>
 
       {/* Table Area */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm min-h-[500px]">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">User Onboarding Profiles</h3>
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 min-h-[500px]">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">User Onboarding Profiles</h3>
         
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
             Error: {error}
           </div>
         )}
@@ -144,7 +144,7 @@ const Onboardings = () => {
         ) : filteredOnboardings.length > 0 ? (
           <div className="w-full overflow-x-auto">
             {/* Table Header */}
-            <div className="grid grid-cols-6 gap-4 pb-4 text-[13px] font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 min-w-[700px]">
+            <div className="grid grid-cols-6 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[700px]">
               <div>User ID</div>
               <div>Country</div>
               <div>Stage</div>
@@ -158,12 +158,12 @@ const Onboardings = () => {
               {filteredOnboardings.map((o: any, index: number) => (
                 <div 
                   key={o._id || o.userid || index} 
-                  className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 dark:text-gray-350 border-b border-gray-50 dark:border-gray-700/50 items-center hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors"
+                  className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors"
                 >
-                  <div className="font-mono text-[11px] text-blue-600 dark:text-blue-400">{o.userid || 'N/A'}</div>
+                  <div className="font-mono text-[11px] text-blue-600">{o.userid || 'N/A'}</div>
                   <div>{o.country || 'N/A'}</div>
                   <div>
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 capitalize">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-600 capitalize">
                       {o.stage || 'Not set'}
                     </span>
                   </div>
@@ -178,8 +178,8 @@ const Onboardings = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <User className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-2" />
-            <p className="text-gray-500 dark:text-gray-400">
+            <User className="w-12 h-12 text-gray-300 mb-2" />
+            <p className="text-gray-500">
               {error ? 'Failed to load onboardings. Check console for details.' : 'No onboardings found.'}
             </p>
           </div>
@@ -189,13 +189,13 @@ const Onboardings = () => {
       {/* Create Onboarding Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Onboarding</h2>
+                <h2 className="text-xl font-bold text-gray-900">Create New Onboarding</h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -206,7 +206,7 @@ const Onboardings = () => {
               <form onSubmit={handleCreateOnboarding}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Country *
                   </label>
                   <input
@@ -214,19 +214,19 @@ const Onboardings = () => {
                     value={formData.country}
                     onChange={(e) => setFormData({...formData, country: e.target.value})}
                     placeholder="USA"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Stage *
                   </label>
                   <select
                     value={formData.stage}
                     onChange={(e) => setFormData({...formData, stage: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Idea">Idea</option>
                     <option value="Seed">Seed</option>
@@ -236,7 +236,7 @@ const Onboardings = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Product *
                   </label>
                   <input
@@ -244,19 +244,19 @@ const Onboardings = () => {
                     value={formData.product}
                     onChange={(e) => setFormData({...formData, product: e.target.value})}
                     placeholder="SaaS Platform"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Team Size
                   </label>
                   <select
                     value={formData.teamsize}
                     onChange={(e) => setFormData({...formData, teamsize: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="1-10">1-10</option>
                     <option value="10-50">10-50</option>
@@ -266,7 +266,7 @@ const Onboardings = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Number of Businesses
                   </label>
                   <input
@@ -274,12 +274,12 @@ const Onboardings = () => {
                     value={formData.numberofbusinesses}
                     onChange={(e) => setFormData({...formData, numberofbusinesses: parseInt(e.target.value)})}
                     min="1"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Strategy
                   </label>
                   <input
@@ -287,12 +287,12 @@ const Onboardings = () => {
                     value={formData.strategy}
                     onChange={(e) => setFormData({...formData, strategy: e.target.value})}
                     placeholder="B2B"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Team
                   </label>
                   <input
@@ -300,12 +300,12 @@ const Onboardings = () => {
                     value={formData.team}
                     onChange={(e) => setFormData({...formData, team: e.target.value})}
                     placeholder="In-house"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Finance
                   </label>
                   <input
@@ -313,12 +313,12 @@ const Onboardings = () => {
                     value={formData.finance}
                     onChange={(e) => setFormData({...formData, finance: e.target.value})}
                     placeholder="Bootstrap"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Growth Focus
                   </label>
                   <input
@@ -326,12 +326,12 @@ const Onboardings = () => {
                     value={formData.growth}
                     onChange={(e) => setFormData({...formData, growth: e.target.value})}
                     placeholder="High"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Referral Code
                   </label>
                   <input
@@ -339,14 +339,14 @@ const Onboardings = () => {
                     value={formData.referralcode}
                     onChange={(e) => setFormData({...formData, referralcode: e.target.value})}
                     placeholder="REF123"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
               </form>
             </div>
 
-            <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+            <div className="p-6 border-t border-gray-200 flex gap-3">
               <button
                 onClick={handleCreateOnboarding}
                 disabled={creating}
@@ -356,7 +356,7 @@ const Onboardings = () => {
               </button>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors cursor-pointer"
+                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
               >
                 Cancel
               </button>
