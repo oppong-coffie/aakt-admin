@@ -280,7 +280,7 @@ const Onboardings = () => {
             <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
           </div>
         ) : filteredOnboardings.length > 0 ? (
-          <div className="w-full overflow-x-auto">
+          <div className="w-full overflow-visible">
             {/* Table Header */}
             <div className="grid grid-cols-7 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[800px]">
               <div>User ID</div>
@@ -324,7 +324,7 @@ const Onboardings = () => {
                     
                     {openMenuId === (o._id || o.userid) && (
                       <div 
-                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
+                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[9999]"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button
