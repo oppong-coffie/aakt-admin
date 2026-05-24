@@ -357,6 +357,41 @@ export const adminApi = {
     getAllBusinesses: () =>
         apiRequest('/admin/businesses', { method: 'GET' }),
 
+    // Admin Workloads
+    createAdminWorkload: (data: Record<string, unknown>) =>
+        apiRequest('/admin/workloads', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    getAdminWorkloads: () =>
+        apiRequest('/admin/workloads', { method: 'GET' }),
+
+    updateAdminWorkload: (id: string, data: Record<string, unknown>) =>
+        apiRequest(`/admin/workloads/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteAdminWorkload: (id: string) =>
+        apiRequest(`/admin/workloads/${id}`, { method: 'DELETE' }),
+
+    createAdminWorkloadTask: (workloadId: string, data: Record<string, unknown>) =>
+        apiRequest(`/admin/workloads/${workloadId}/tasks`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    deleteAdminWorkloadTask: (workloadId: string, taskId: string) =>
+        apiRequest(`/admin/workloads/${workloadId}/tasks/${taskId}`, { method: 'DELETE' }),
+
+    updateAdminWorkloadTaskStatus: (workloadId: string, taskId: string, status: string) =>
+        apiRequest(`/admin/workloads/${workloadId}/tasks/${taskId}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status }),
+        }),
+
+    // User Workloads (regular endpoints)
     getWorkloads: () =>
         apiRequest('/workloads', { method: 'GET' }),
 
