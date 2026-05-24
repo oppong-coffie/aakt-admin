@@ -59,7 +59,7 @@ const Workloads = () => {
     const fetchWorkloads = async () => {
         try {
             setLoading(true);
-            const data = await adminApi.getWorkloads();
+            const data = await adminApi.getAdminWorkloads();
             const workloadList = Array.isArray(data) ? data : (data.workloads || data.data || []);
             setWorkloads(workloadList);
         } catch (err) {
@@ -73,7 +73,7 @@ const Workloads = () => {
         if (!newWorkloadName.trim()) return;
         try {
             setCreating(true);
-            await adminApi.createWorkload({
+            await adminApi.createAdminWorkload({
                 workloadname: newWorkloadName.trim(),
                 status: newWorkloadStatus,
                 name: newWorkloadName.trim(),
@@ -93,7 +93,7 @@ const Workloads = () => {
     const handleDeleteWorkload = async (id: string) => {
         if (!confirm('Are you sure you want to delete this workload?')) return;
         try {
-            await adminApi.deleteWorkload(id);
+            await adminApi.deleteAdminWorkload(id);
             toast.success('Workload deleted successfully');
             await fetchWorkloads();
         } catch (err) {
@@ -104,7 +104,7 @@ const Workloads = () => {
     const handleAddTask = async () => {
         if (!newTaskName.trim() || !activeWorkloadId) return;
         try {
-            await adminApi.createWorkloadTask(activeWorkloadId, { taskname: newTaskName.trim() });
+            await adminApi.createAdminWorkloadTask(activeWorkloadId, { taskname: newTaskName.trim() });
             setNewTaskName('');
             setShowNewTaskForm(false);
             setActiveWorkloadId(null);
