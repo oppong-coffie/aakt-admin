@@ -17,7 +17,7 @@ const GrowthChart = () => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm md:col-span-2 flex flex-col">
       <div className="flex justify-between items-center mb-8">
-        <h3 className="text-lg font-semibold text-gray-900">User & Company Growth</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Users and Business Growth</h3>
         <div className="flex items-center gap-6 text-[13px]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#b8cbf2]"></span>

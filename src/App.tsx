@@ -2,15 +2,11 @@ import { Navigate, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import { ToastProvider } from './components/Toast';
 import Dashboard from './pages/Dashboard';
-import Analytics from './pages/Analytics';
 import Business from './pages/Business';
 import BusinessDetails from './pages/BusinessDetails';
-import Support from './pages/Support';
 import Users from './pages/Users';
 import Admins from './pages/Admins';
-import Settings from './pages/Settings';
 import Login from './pages/Login';
-import Workloads from './pages/Workloads';
 import Onboardings from './pages/Onboardings';
 import Portfolio from './pages/Portfolio';
 import Folders from './pages/Folders';
@@ -58,10 +54,8 @@ function App() {
                 <main className="flex-1 w-full overflow-x-hidden overflow-y-auto">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/workloads" element={<Workloads />} />
                     <Route path="/business" element={<Business />} />
-                    <Route path="/portfolio" element={<Portfolio />} />
+                    <Route path="/projects" element={<Portfolio />} />
                     <Route path="/folders" element={<Folders />} />
                     <Route path="/business-items" element={<BusinessItems />} />
                     <Route path="/business-documents" element={<BusinessDocuments />} />
@@ -69,8 +63,6 @@ function App() {
                     <Route path="/onboardings" element={<Onboardings />} />
                     <Route path="/users" element={<Users />} />
                     <Route path="/admins" element={<Admins />} />
-                    <Route path="/support" element={<Support />} />
-                    <Route path="/settings" element={<Settings />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>

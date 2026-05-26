@@ -62,7 +62,7 @@ const Business = () => {
 
   return (
     <div className="p-8 bg-white min-h-full">
-      <h1 className="text-[28px] font-semibold text-gray-900 mb-6">Businesses</h1>
+      <h1 className="text-[28px] font-semibold text-gray-900 mb-6">Projects</h1>
 
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-6">
