@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, LogOut, CheckSquare, UserPlus, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Briefcase, FolderKanban, Users, ShieldCheck, LogOut } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -11,13 +11,10 @@ const Sidebar = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Admin Workloads', path: '/workloads', icon: CheckSquare },
-    { name: 'Business', path: '/business', icon: Briefcase },
-    { name: 'Onboardings', path: '/onboardings', icon: UserPlus },
+    { name: 'Businesses', path: '/business', icon: Briefcase },
+    { name: 'Projects', path: '/projects', icon: FolderKanban },
     { name: 'Users', path: '/users', icon: Users },
     { name: 'Admins', path: '/admins', icon: ShieldCheck },
-    { name: 'Analytics', path: '/analytics', icon: BarChart2 },
-    { name: 'Support', path: '/support', icon: HelpCircle },
   ];
 
   return (
@@ -45,21 +42,6 @@ const Sidebar = () => {
       </nav>
 
       <div className="p-4 dark:border-gray-700 flex flex-col gap-2">
-        <ul className="flex flex-col gap-1 px-1 mb-2">
-          <li>
-            <Link
-              to="/settings"
-              className={`flex items-center gap-3 px-3 rounded-xl text-[13px] font-medium transition-colors ${location.pathname === '/settings'
-                ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
-                }`}
-            >
-              <Settings className="w-3 h-3" />
-              Settings
-            </Link>
-          </li>
-        </ul>
-
         <div className="px-3 py-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-600">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-white font-bold text-sm shadow-lg">
