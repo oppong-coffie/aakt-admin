@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import { ToastProvider } from './components/Toast';
 import Dashboard from './pages/Dashboard';
@@ -8,45 +7,33 @@ import Business from './pages/Business';
 import BusinessDetails from './pages/BusinessDetails';
 import Support from './pages/Support';
 import Users from './pages/Users';
+import Admins from './pages/Admins';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
-import Register from './pages/Register';
-import Landing from './pages/Landing';
 import Workloads from './pages/Workloads';
-import UserWorkloads from './pages/UserWorkloads';
 import Onboardings from './pages/Onboardings';
 import Portfolio from './pages/Portfolio';
 import Folders from './pages/Folders';
 import BusinessItems from './pages/BusinessItems';
 import BusinessDocuments from './pages/BusinessDocuments';
 
-// Redirect to login if token is missing
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
+function AdminGuard({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('auth_token');
+  const isAdmin = localStorage.getItem('is_admin') === 'true';
 
-  useEffect(() => {
-    if (!token) {
-      navigate('/login');
-    }
-  }, [token, navigate]);
-
-  if (!token) return null;
+  if (!token || !isAdmin) {
+    return <Navigate to="/login" replace />;
+  }
   return <>{children}</>;
 }
 
-// Redirect to dashboard if token exists
 function PublicGuard({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   const token = localStorage.getItem('auth_token');
+  const isAdmin = localStorage.getItem('is_admin') === 'true';
 
-  useEffect(() => {
-    if (token) {
-      navigate('/');
-    }
-  }, [token, navigate]);
-
-  if (token) return null;
+  if (token && isAdmin) {
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -54,16 +41,14 @@ function App() {
   return (
     <ToastProvider>
       <Routes>
-        {/* Landing & Auth Pages (No Sidebar) */}
-        <Route path="/landing" element={<Landing />} />
+        {/* Admin auth page (No Sidebar) */}
         <Route path="/login" element={<PublicGuard><Login /></PublicGuard>} />
-        <Route path="/register" element={<PublicGuard><Register /></PublicGuard>} />
 
-        {/* Dashboard Pages (With Sidebar) */}
+        {/* Admin pages (With Sidebar) */}
         <Route
           path="/*"
           element={
-            <AuthGuard>
+            <AdminGuard>
               <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
                 {/* START:: Sidebar */}
                 <Sidebar />
@@ -75,7 +60,6 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/workloads" element={<Workloads />} />
-                    <Route path="/my-workloads" element={<UserWorkloads />} />
                     <Route path="/business" element={<Business />} />
                     <Route path="/portfolio" element={<Portfolio />} />
                     <Route path="/folders" element={<Folders />} />
@@ -84,13 +68,15 @@ function App() {
                     <Route path="/business/:id" element={<BusinessDetails />} />
                     <Route path="/onboardings" element={<Onboardings />} />
                     <Route path="/users" element={<Users />} />
+                    <Route path="/admins" element={<Admins />} />
                     <Route path="/support" element={<Support />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
                 {/* END:: Main */}
               </div>
-            </AuthGuard>
+            </AdminGuard>
           }
         />
       </Routes>

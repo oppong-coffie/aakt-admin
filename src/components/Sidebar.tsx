@@ -1,26 +1,21 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, LogOut, CheckSquare, UserPlus } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Briefcase, Users, HelpCircle, Settings, LogOut, CheckSquare, UserPlus, ShieldCheck } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
-  const isAdmin = localStorage.getItem('is_admin') === 'true';
-  
-  // Get user info from localStorage
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
-  const userName = user?.fullName || user?.name || localStorage.getItem('user_email') || 'User';
+  const userName = user?.fullName || user?.name || localStorage.getItem('user_email') || 'Admin';
   const userEmail = user?.email || localStorage.getItem('user_email') || '';
   const userInitials = userName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    ...(isAdmin ? [
-      { name: 'Admin Workloads', path: '/workloads', icon: CheckSquare },
-      { name: 'Business', path: '/business', icon: Briefcase },
-      { name: 'Onboardings', path: '/onboardings', icon: UserPlus },
-      { name: 'Users', path: '/users', icon: Users },
-    ] : []),
-    { name: 'My Workloads', path: '/my-workloads', icon: CheckSquare },
+    { name: 'Admin Workloads', path: '/workloads', icon: CheckSquare },
+    { name: 'Business', path: '/business', icon: Briefcase },
+    { name: 'Onboardings', path: '/onboardings', icon: UserPlus },
+    { name: 'Users', path: '/users', icon: Users },
+    { name: 'Admins', path: '/admins', icon: ShieldCheck },
     { name: 'Analytics', path: '/analytics', icon: BarChart2 },
     { name: 'Support', path: '/support', icon: HelpCircle },
   ];
@@ -75,7 +70,7 @@ const Sidebar = () => {
                 {userName}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {userEmail || (isAdmin ? 'Administrator' : 'User')}
+                {userEmail || 'Administrator'}
               </span>
             </div>
           </div>
@@ -87,7 +82,9 @@ const Sidebar = () => {
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('is_admin');
                 localStorage.removeItem('user_role');
-                window.location.href = '/landing';
+                localStorage.removeItem('user');
+                localStorage.removeItem('user_email');
+                window.location.href = '/login';
               }}
               className="w-full flex items-center gap-3 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200"
             >

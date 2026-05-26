@@ -333,6 +333,9 @@ export const adminApi = {
     getAllUsers: () =>
         apiRequest('/admin/users', { method: 'GET' }),
 
+    getAllAdmins: () =>
+        apiRequest('/admin/users', { method: 'GET' }),
+
     getAllOnboardings: () =>
         apiRequest('/admin/onboardings', { method: 'GET' }),
 

@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '../services/api';
 import { toast } from '../components/Toast';
 
 const Login = () => {
     const navigate = useNavigate();
-    const [isAdmin, setIsAdmin] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -15,229 +16,126 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = isAdmin 
-                ? await authApi.adminLogin(email, password)
-                : await authApi.login(email, password);
-            
-            // Store token if provided
-            if (response.token) {
-                localStorage.setItem('auth_token', response.token);
+            const response = await authApi.adminLogin(email, password);
+            const account = response.data || response.user || response.admin || null;
+            const token = response.token || response.accessToken || account?.token || account?.accessToken;
+            const role = response.role || account?.role;
+            const isAdmin =
+                role === 'admin' ||
+                response.isAdmin === true ||
+                response.is_admin === true ||
+                account?.isAdmin === true ||
+                account?.is_admin === true;
+
+            if (!token) {
+                throw new Error('Admin login succeeded, but no access token was returned.');
             }
-            if (response.accessToken) {
-                localStorage.setItem('auth_token', response.accessToken);
+
+            if (role && role !== 'admin' && !isAdmin) {
+                throw new Error('Access denied. Admin privileges required.');
             }
-            
-            // Store user data
-            if (response.data) {
-                localStorage.setItem('user', JSON.stringify(response.data));
-                if (response.data.email) {
-                    localStorage.setItem('user_email', response.data.email);
-                }
+
+            localStorage.setItem('auth_token', token);
+            localStorage.setItem('is_admin', 'true');
+            localStorage.setItem('user_role', 'admin');
+
+            if (account) {
+                localStorage.setItem('user', JSON.stringify(account));
             }
-            
-            // If admin login, check role
-            if (isAdmin) {
-                // Check role from API response structure
-                const isAdminUser = response.data?.role === 'admin' || 
-                                   response.role === 'admin' || 
-                                   response.isAdmin === true || 
-                                   response.is_admin === true;
-                
-                if (isAdminUser) {
-                    localStorage.setItem('is_admin', 'true');
-                    toast.success('Welcome, Admin!');
-                    navigate('/');
-                } else {
-                    // Still set as admin if login to /admin/login was successful
-                    localStorage.setItem('is_admin', 'true');
-                    toast.success('Welcome, Admin!');
-                    navigate('/');
-                }
-            } else {
-                toast.success('Welcome back!');
-                navigate('/');
+            if (account?.email || email) {
+                localStorage.setItem('user_email', account?.email || email);
             }
+
+            toast.success('Welcome, Admin!');
+            navigate('/');
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Login failed. Please try again.');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('is_admin');
+            localStorage.removeItem('user_role');
+            toast.error(err instanceof Error ? err.message : 'Admin login failed. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex bg-white">
-            {/* Left Side - Image/Branding */}
-            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-                {/* Background Image */}
-                <img 
-                    src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=800&fit=crop" 
-                    alt="Dashboard workspace" 
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 to-black/95"></div>
-                
-                {/* Content */}
-                <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
-                    <div className="max-w-md">
-                        <div className="mb-8">
-                            <h1 className="text-5xl font-bold mb-4">AAKT Admin</h1>
-                            <p className="text-xl text-blue-100">
-                                {isAdmin 
-                                    ? 'Manage your platform with powerful admin tools' 
-                                    : 'Access your dashboard and manage your workloads'}
-                            </p>
-                        </div>
-                        
-                        {/* Feature List */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                </div>
-                                <span className="text-blue-50">Fast & Secure Access</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                </div>
-                                <span className="text-blue-50">Enterprise-Grade Security</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                                    </svg>
-                                </div>
-                                <span className="text-blue-50">Comprehensive Dashboard</span>
-                            </div>
-                        </div>
+        <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center px-5 py-10">
+            <div className="w-full max-w-[402px] rounded-2xl border border-gray-200 bg-white px-5 py-5 shadow-[0_1px_3px_rgba(15,23,42,0.12)]">
+                <div className="flex justify-center mb-4">
+                    <div className="rounded-md bg-[#2563ff] px-2.5 py-1 text-white text-lg font-bold leading-6">
+                        AAKT
                     </div>
                 </div>
-            </div>
 
-            {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
-                <div className="w-full max-w-md">
-                    {/* Logo */}
-                    <div className="mb-8">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                            {isAdmin ? 'Admin Portal' : 'Welcome Back'}
-                        </h2>
-                        <p className="text-gray-600">
-                            {isAdmin ? 'Sign in with admin credentials' : 'Sign in to your account'}
-                        </p>
-                    </div>
+                <h1 className="text-center text-xl font-bold text-black mb-3">Welcome</h1>
 
-                    {/* Toggle Switch */}
-                    <div className="mb-8 p-1 bg-gray-100 rounded-xl">
-                        <div className="grid grid-cols-2 gap-1">
-                            <button
-                                type="button"
-                                onClick={() => setIsAdmin(false)}
-                                className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                                    !isAdmin 
-                                        ? 'bg-white text-gray-900 shadow-sm' 
-                                        : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                                User Login
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setIsAdmin(true)}
-                                className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                                    isAdmin 
-                                        ? 'bg-white text-gray-900 shadow-sm' 
-                                        : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                                Admin Login
-                            </button>
-                        </div>
-                    </div>
+                <p className="text-center text-sm text-gray-500 mb-8">
+                    Don't have an account?{' '}
+                    <button
+                        type="button"
+                        onClick={() => toast.error('Ask an existing admin to create an account.')}
+                        className="font-medium text-[#003cff] hover:text-blue-700"
+                    >
+                        Sign Up
+                    </button>
+                </p>
 
-                    {/* Login Form */}
-                    <form onSubmit={handleLogin} className="space-y-5">
-                        {/* Email */}
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
-                                Email Address
-                            </label>
+                <form onSubmit={handleLogin}>
+                    <div className="space-y-3">
+                        <div className="relative">
                             <input
                                 id="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder={isAdmin ? "admin@example.com" : "you@example.com"}
+                                placeholder="Email"
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="h-[30px] w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
                             />
                         </div>
 
-                        {/* Password */}
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">
-                                Password
-                            </label>
+                        <div className="relative">
                             <input
                                 id="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
+                                placeholder="Password"
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="h-[30px] w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
                             />
-                        </div>
-
-                        {/* Remember Me & Forgot Password */}
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                                />
-                                <span className="ml-2 text-sm text-gray-600">Remember me</span>
-                            </label>
-                            <a href="#" className="text-sm text-gray-900 hover:text-black font-medium">
-                                Forgot password?
-                            </a>
-                        </div>
-
-                        {/* Login Button */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors mt-6 cursor-pointer"
-                        >
-                            {loading ? 'Signing in...' : (isAdmin ? 'Sign In as Admin' : 'Sign In')}
-                        </button>
-                    </form>
-
-                    {/* Footer Links */}
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                        <div className="text-center space-y-3">
-                            {!isAdmin && (
-                                <p className="text-gray-600">
-                                    Don't have an account?{' '}
-                                    <Link to="/register" className="text-gray-900 hover:text-black font-semibold">
-                                        Sign up
-                                    </Link>
-                                </p>
-                            )}
-                            <p className="text-sm text-gray-500">
-                                <Link to="/landing" className="text-gray-900 hover:text-black font-semibold">
-                                    ← Back to home
-                                </Link>
-                            </p>
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
                         </div>
                     </div>
-                </div>
+
+                    <div className="flex items-center gap-3 my-7 text-xs text-gray-300">
+                        <div className="h-px flex-1 bg-gray-200"></div>
+                        <span>Or</span>
+                        <div className="h-px flex-1 bg-gray-200"></div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="h-9 w-full rounded-lg bg-[#aab8fb] text-white text-base font-bold transition-colors hover:bg-[#92a3fb] disabled:cursor-not-allowed disabled:bg-[#b8c4fb]"
+                    >
+                        {loading ? 'Signing In...' : 'Sign In'}
+                    </button>
+                </form>
+
+                <p className="mt-6 text-center text-[10px] text-gray-400">
+                    By continuing, you agree with our{' '}
+                    <span className="font-medium text-[#003cff]">Terms &amp; Services</span>
+                    {' '}and{' '}
+                    <span className="font-medium text-[#003cff]">Privacy Policy</span>.
+                </p>
             </div>
         </div>
     );

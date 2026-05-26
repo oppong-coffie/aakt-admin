@@ -1,384 +1,136 @@
-import { useState, useEffect } from 'react';
-import { Search, User, Plus, X, Zap, TrendingUp, MoreVertical, ListTodo, Flag, Footprints } from 'lucide-react';
-import { adminApi, onboardingApi } from '../services/api';
-import { toast } from '../components/Toast';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, User } from 'lucide-react';
+import { adminApi } from '../services/api';
+
+type OnboardingItem = {
+  _id?: string;
+  id?: string;
+  userid?: string;
+  country?: string;
+  stage?: string;
+  teamsize?: string | number;
+  numberofbusinesses?: string | number;
+  createdAt?: string;
+};
+
+type OnboardingsResponse = {
+  onboardings?: OnboardingItem[];
+  data?: OnboardingItem[];
+};
+
+const toText = (value: unknown) => (value == null ? '' : String(value));
+
+const getOnboardingList = (response: unknown): OnboardingItem[] => {
+  if (Array.isArray(response)) {
+    return response as OnboardingItem[];
+  }
+
+  if (response && typeof response === 'object') {
+    const payload = response as OnboardingsResponse;
+    return payload.onboardings || payload.data || [];
+  }
+
+  return [];
+};
 
 const Onboardings = () => {
-  const [onboardings, setOnboardings] = useState<any[]>([]);
+  const [onboardings, setOnboardings] = useState<OnboardingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [showSkillsModal, setShowSkillsModal] = useState(false);
-  const [showConfidenceModal, setShowConfidenceModal] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [showStageModal, setShowStageModal] = useState(false);
-  const [showStepModal, setShowStepModal] = useState(false);
-  const [showFeelingModal, setShowFeelingModal] = useState(false);
-  const [stageData, setStageData] = useState('');
-  const [stepData, setStepData] = useState('');
-  const [feelingData, setFeelingData] = useState<number[]>([0, 0, 0, 0]);
-  const [confidenceData, setConfidenceData] = useState({
-    capital: 0,
-    influence: 0,
-    intel: 0,
-    network: 0,
-    skillset: 0
-  });
-  const [skillsData, setSkillsData] = useState({
-    product: '',
-    strategy: '',
-    team: '',
-    finance: ''
-  });
-  const [formData, setFormData] = useState({
-    country: '',
-    numberofbusinesses: 1,
-    teamsize: '1-10',
-    referralcode: '',
-    otp: 1,
-    stage: 'Idea',
-    product: '',
-    strategy: '',
-    team: '',
-    finance: '',
-    growth: ''
-  });
+
+  const fetchOnboardings = async () => {
+    try {
+      const response: unknown = await adminApi.getAllOnboardings();
+      setError('');
+      setOnboardings(getOnboardingList(response));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch onboardings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOnboardings = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const res = await adminApi.getAllOnboardings();
-        console.log('Onboardings response:', res);
-        
-        let list: any[] = [];
-        if (Array.isArray(res)) {
-          list = res;
-        } else if (res && typeof res === 'object') {
-          list = (res as any).onboardings || (res as any).data || [];
-        }
-        
-        setOnboardings(list);
-      } catch (err: any) {
-        console.error('Error fetching onboardings:', err);
-        setError(err?.message || 'Failed to fetch onboardings');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const timeoutId = window.setTimeout(() => {
+      void fetchOnboardings();
+    }, 0);
 
-    fetchOnboardings();
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
-  const filteredOnboardings = onboardings.filter((o: any) => {
-    const userid = o?.userid || '';
-    const country = o?.country || '';
-    const stage = o?.stage || '';
-    const query = searchQuery.toLowerCase();
-    return userid.toLowerCase().includes(query) ||
-           country.toLowerCase().includes(query) ||
-           stage.toLowerCase().includes(query);
-  });
+  const filteredOnboardings = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return onboardings;
 
-  const handleCreateOnboarding = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.country || !formData.stage || !formData.product) {
-      toast.error('Please fill in required fields (Country, Stage, Product)');
-      return;
-    }
-
-    try {
-      setCreating(true);
-      await adminApi.createOnboarding(formData);
-      toast.success('Onboarding created successfully');
-      setShowCreateModal(false);
-      setFormData({
-        country: '',
-        numberofbusinesses: 1,
-        teamsize: '1-10',
-        referralcode: '',
-        otp: 1,
-        stage: 'Idea',
-        product: '',
-        strategy: '',
-        team: '',
-        finance: '',
-        growth: ''
-      });
-      // Refresh list
-      const res = await adminApi.getAllOnboardings();
-      const list = Array.isArray(res) ? res : (res as any).onboardings || (res as any).data || [];
-      setOnboardings(list);
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to create onboarding');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleAddSkills = async (onboardingId: string) => {
-    console.log('Adding skills for onboarding:', onboardingId);
-    setSkillsData({ product: '', strategy: '', team: '', finance: '' });
-    setShowSkillsModal(true);
-  };
-
-  const handleSubmitSkills = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!skillsData.product && !skillsData.strategy && !skillsData.team && !skillsData.finance) {
-      toast.error('Please fill at least one skill field');
-      return;
-    }
-
-    try {
-      await onboardingApi.updateSkills(skillsData);
-      toast.success('Skills added successfully');
-      setShowSkillsModal(false);
-      setSkillsData({ product: '', strategy: '', team: '', finance: '' });
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to add skills');
-    }
-  };
-
-  const handleAddConfidence = async (onboardingId: string) => {
-    console.log('Adding confidence for onboarding:', onboardingId);
-    setConfidenceData({ capital: 0, influence: 0, intel: 0, network: 0, skillset: 0 });
-    setShowConfidenceModal(true);
-  };
-
-  const handleSubmitConfidence = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (confidenceData.capital === 0 && confidenceData.influence === 0 && confidenceData.intel === 0 && 
-        confidenceData.network === 0 && confidenceData.skillset === 0) {
-      toast.error('Please fill at least one confidence field');
-      return;
-    }
-
-    try {
-      await onboardingApi.updateConfident(confidenceData);
-      toast.success('Confidence levels added successfully');
-      setShowConfidenceModal(false);
-      setConfidenceData({ capital: 0, influence: 0, intel: 0, network: 0, skillset: 0 });
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to add confidence levels');
-    }
-  };
-
-  const handleUpdateStage = async (onboardingId: string) => {
-    console.log('Updating stage for onboarding:', onboardingId);
-    setStageData('');
-    setShowStageModal(true);
-  };
-
-  const handleSubmitStage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stageData.trim()) {
-      toast.error('Please enter a stage');
-      return;
-    }
-
-    try {
-      await onboardingApi.updateStage(stageData);
-      toast.success('Stage updated successfully');
-      setShowStageModal(false);
-      setStageData('');
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update stage');
-    }
-  };
-
-  const handleUpdateStep = async (onboardingId: string) => {
-    console.log('Updating step for onboarding:', onboardingId);
-    setStepData('');
-    setShowStepModal(true);
-  };
-
-  const handleSubmitStep = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stepData.trim()) {
-      toast.error('Please enter a step');
-      return;
-    }
-
-    try {
-      await onboardingApi.updateStep(stepData);
-      toast.success('Step updated successfully');
-      setShowStepModal(false);
-      setStepData('');
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update step');
-    }
-  };
-
-  const handleUpdateFeeling = async (onboardingId: string) => {
-    console.log('Updating feeling for onboarding:', onboardingId);
-    setFeelingData([0, 0, 0, 0]);
-    setShowFeelingModal(true);
-  };
-
-  const handleSubmitFeeling = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (feelingData.every(val => val === 0)) {
-      toast.error('Please fill at least one feeling value');
-      return;
-    }
-
-    try {
-      await onboardingApi.updateFeeling(feelingData);
-      toast.success('Feeling updated successfully');
-      setShowFeelingModal(false);
-      setFeelingData([0, 0, 0, 0]);
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update feeling');
-    }
-  };
+    return onboardings.filter((onboarding) => {
+      const userId = toText(onboarding.userid).toLowerCase();
+      const country = toText(onboarding.country).toLowerCase();
+      const stage = toText(onboarding.stage).toLowerCase();
+      return userId.includes(query) || country.includes(query) || stage.includes(query);
+    });
+  }, [onboardings, searchQuery]);
 
   return (
-    <div className="p-8 bg-white min-h-screen" onClick={() => setOpenMenuId(null)}>
+    <div className="p-8 bg-white min-h-screen">
       <div className="mb-6">
         <h1 className="text-[28px] font-semibold text-gray-900 mb-6">Onboardings</h1>
-        
-        {/* Top Bar */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex gap-4 items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-              <input 
-                type="text" 
-                placeholder="search by user ID, country, or stage..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2.5 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-[320px] shadow-sm text-[14px] text-gray-800"
-              />
-            </div>
-          </div>
 
-          <button 
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-[#002df3] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[14px] font-medium transition-colors shadow-sm cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Create Onboarding
-          </button>
+        <div className="flex items-center mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="search by user ID, country, or stage..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-4 py-2.5 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-[320px] shadow-sm text-[14px] text-gray-800"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Table Area */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 min-h-[500px]">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">User Onboarding Profiles</h3>
-        
+
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
             Error: {error}
           </div>
         )}
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
           </div>
         ) : filteredOnboardings.length > 0 ? (
-          <div className="w-full overflow-visible">
-            {/* Table Header */}
-            <div className="grid grid-cols-7 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[800px]">
+          <div className="w-full overflow-x-auto">
+            <div className="grid grid-cols-6 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[760px]">
               <div>User ID</div>
               <div>Country</div>
               <div>Stage</div>
               <div>Team Size</div>
               <div>Businesses</div>
               <div>Created</div>
-              <div className="text-right">Actions</div>
             </div>
-            
-            {/* Table Body */}
-            <div className="flex flex-col min-w-[800px]">
-              {filteredOnboardings.map((o: any, index: number) => (
-                <div 
-                  key={o._id || o.userid || index} 
-                  className="grid grid-cols-7 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors"
+
+            <div className="flex flex-col min-w-[760px]">
+              {filteredOnboardings.map((onboarding, index) => (
+                <div
+                  key={onboarding._id || onboarding.id || onboarding.userid || index}
+                  className="grid grid-cols-6 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors"
                 >
-                  <div className="font-mono text-[11px] text-blue-600">{o.userid || 'N/A'}</div>
-                  <div>{o.country || 'N/A'}</div>
+                  <div className="font-mono text-[11px] text-blue-600">{onboarding.userid || 'N/A'}</div>
+                  <div>{onboarding.country || 'N/A'}</div>
                   <div>
                     <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-600 capitalize">
-                      {o.stage || 'Not set'}
+                      {onboarding.stage || 'Not set'}
                     </span>
                   </div>
-                  <div>{o.teamsize || '1'}</div>
-                  <div>{o.numberofbusinesses || 0}</div>
+                  <div>{onboarding.teamsize || '1'}</div>
+                  <div>{onboarding.numberofbusinesses || 0}</div>
                   <div className="text-[11px] text-gray-500">
-                    {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A'}
-                  </div>
-                  <div className="text-right relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(openMenuId === (o._id || o.userid) ? null : (o._id || o.userid));
-                      }}
-                      className="inline-flex items-center justify-center w-8 h-8 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <MoreVertical className="w-4 h-4 text-gray-600" />
-                    </button>
-                    
-                    {openMenuId === (o._id || o.userid) && (
-                      <div 
-                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[9999]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={() => {
-                            handleAddSkills(o._id || o.userid);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <Zap className="w-4 h-4 text-blue-600" />
-                          <span>Add Skills</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleAddConfidence(o._id || o.userid);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <TrendingUp className="w-4 h-4 text-purple-600" />
-                          <span>Add Confidence</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleUpdateStage(o._id || o.userid);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <Flag className="w-4 h-4 text-green-600" />
-                          <span>Update Stage</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleUpdateStep(o._id || o.userid);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <Footprints className="w-4 h-4 text-orange-600" />
-                          <span>Update Step</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleUpdateFeeling(o._id || o.userid);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <ListTodo className="w-4 h-4 text-pink-600" />
-                          <span>Update Feeling</span>
-                        </button>
-                      </div>
-                    )}
+                    {onboarding.createdAt ? new Date(onboarding.createdAt).toLocaleDateString() : 'N/A'}
                   </div>
                 </div>
               ))}
@@ -393,512 +145,6 @@ const Onboardings = () => {
           </div>
         )}
       </div>
-
-      {/* Create Onboarding Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Create New Onboarding</h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex-1">
-              <form onSubmit={handleCreateOnboarding}>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Country *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.country}
-                    onChange={(e) => setFormData({...formData, country: e.target.value})}
-                    placeholder="USA"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Stage *
-                  </label>
-                  <select
-                    value={formData.stage}
-                    onChange={(e) => setFormData({...formData, stage: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Idea">Idea</option>
-                    <option value="Seed">Seed</option>
-                    <option value="Growth">Growth</option>
-                    <option value="Scale">Scale</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.product}
-                    onChange={(e) => setFormData({...formData, product: e.target.value})}
-                    placeholder="SaaS Platform"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Team Size
-                  </label>
-                  <select
-                    value={formData.teamsize}
-                    onChange={(e) => setFormData({...formData, teamsize: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="1-10">1-10</option>
-                    <option value="10-50">10-50</option>
-                    <option value="50-100">50-100</option>
-                    <option value="100+">100+</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Businesses
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.numberofbusinesses}
-                    onChange={(e) => setFormData({...formData, numberofbusinesses: parseInt(e.target.value)})}
-                    min="1"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Strategy
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.strategy}
-                    onChange={(e) => setFormData({...formData, strategy: e.target.value})}
-                    placeholder="B2B"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Team
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.team}
-                    onChange={(e) => setFormData({...formData, team: e.target.value})}
-                    placeholder="In-house"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Finance
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.finance}
-                    onChange={(e) => setFormData({...formData, finance: e.target.value})}
-                    placeholder="Bootstrap"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Growth Focus
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.growth}
-                    onChange={(e) => setFormData({...formData, growth: e.target.value})}
-                    placeholder="High"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Referral Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.referralcode}
-                    onChange={(e) => setFormData({...formData, referralcode: e.target.value})}
-                    placeholder="REF123"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              </form>
-            </div>
-
-            <div className="p-6 border-t border-gray-200 flex gap-3">
-              <button
-                onClick={handleCreateOnboarding}
-                disabled={creating}
-                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors cursor-pointer"
-              >
-                {creating ? 'Creating...' : 'Create Onboarding'}
-              </button>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Skills Modal */}
-      {showSkillsModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Add Skills</h2>
-                <button
-                  onClick={() => setShowSkillsModal(false)}
-                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <form onSubmit={handleSubmitSkills} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product
-                  </label>
-                  <input
-                    type="text"
-                    value={skillsData.product}
-                    onChange={(e) => setSkillsData({...skillsData, product: e.target.value})}
-                    placeholder="SaaS Platform"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Strategy
-                  </label>
-                  <input
-                    type="text"
-                    value={skillsData.strategy}
-                    onChange={(e) => setSkillsData({...skillsData, strategy: e.target.value})}
-                    placeholder="B2B"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Team
-                  </label>
-                  <input
-                    type="text"
-                    value={skillsData.team}
-                    onChange={(e) => setSkillsData({...skillsData, team: e.target.value})}
-                    placeholder="In-house"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Finance
-                  </label>
-                  <input
-                    type="text"
-                    value={skillsData.finance}
-                    onChange={(e) => setSkillsData({...skillsData, finance: e.target.value})}
-                    placeholder="Bootstrap"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors cursor-pointer"
-                  >
-                    Add Skills
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowSkillsModal(false)}
-                    className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Confidence Modal */}
-      {showConfidenceModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Add Confidence Levels</h2>
-                <button
-                  onClick={() => setShowConfidenceModal(false)}
-                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <form onSubmit={handleSubmitConfidence} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Capital
-                  </label>
-                  <input
-                    type="number"
-                    value={confidenceData.capital}
-                    onChange={(e) => setConfidenceData({...confidenceData, capital: parseInt(e.target.value) || 0})}
-                    placeholder="10"
-                    min="0"
-                    max="100"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Influence
-                  </label>
-                  <input
-                    type="number"
-                    value={confidenceData.influence}
-                    onChange={(e) => setConfidenceData({...confidenceData, influence: parseInt(e.target.value) || 0})}
-                    placeholder="10"
-                    min="0"
-                    max="100"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Intel
-                  </label>
-                  <input
-                    type="number"
-                    value={confidenceData.intel}
-                    onChange={(e) => setConfidenceData({...confidenceData, intel: parseInt(e.target.value) || 0})}
-                    placeholder="10"
-                    min="0"
-                    max="100"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Network
-                  </label>
-                  <input
-                    type="number"
-                    value={confidenceData.network}
-                    onChange={(e) => setConfidenceData({...confidenceData, network: parseInt(e.target.value) || 0})}
-                    placeholder="24"
-                    min="0"
-                    max="100"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Skillset
-                  </label>
-                  <input
-                    type="number"
-                    value={confidenceData.skillset}
-                    onChange={(e) => setConfidenceData({...confidenceData, skillset: parseInt(e.target.value) || 0})}
-                    placeholder="38"
-                    min="0"
-                    max="100"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors cursor-pointer"
-                  >
-                    Add Confidence
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowConfidenceModal(false)}
-                    className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Update Stage Modal */}
-      {showStageModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Update Stage</h2>
-                <button onClick={() => setShowStageModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleSubmitStage} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Stage</label>
-                  <input
-                    type="text"
-                    value={stageData}
-                    onChange={(e) => setStageData(e.target.value)}
-                    placeholder="Registration"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <button type="submit" className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
-                    Update Stage
-                  </button>
-                  <button type="button" onClick={() => setShowStageModal(false)} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Update Step Modal */}
-      {showStepModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Update Step</h2>
-                <button onClick={() => setShowStepModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleSubmitStep} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Step</label>
-                  <input
-                    type="text"
-                    value={stepData}
-                    onChange={(e) => setStepData(e.target.value)}
-                    placeholder="1"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <button type="submit" className="flex-1 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
-                    Update Step
-                  </button>
-                  <button type="button" onClick={() => setShowStepModal(false)} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Update Feeling Modal */}
-      {showFeelingModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Update Feeling</h2>
-                <button onClick={() => setShowFeelingModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleSubmitFeeling} className="space-y-4">
-                {[0, 1, 2, 3].map((index) => (
-                  <div key={index}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Feeling {index + 1}</label>
-                    <input
-                      type="number"
-                      value={feelingData[index]}
-                      onChange={(e) => {
-                        const newData = [...feelingData];
-                        newData[index] = parseInt(e.target.value) || 0;
-                        setFeelingData(newData);
-                      }}
-                      placeholder="0"
-                      min="0"
-                      max="100"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                    />
-                  </div>
-                ))}
-                <div className="flex gap-3 pt-4">
-                  <button type="submit" className="flex-1 px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
-                    Update Feeling
-                  </button>
-                  <button type="button" onClick={() => setShowFeelingModal(false)} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors cursor-pointer">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
