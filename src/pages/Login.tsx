@@ -67,18 +67,7 @@ const Login = () => {
                     </div>
                 </div>
 
-                <h1 className="text-center text-xl font-bold text-black mb-3">Welcome</h1>
-
-                <p className="text-center text-sm text-gray-500 mb-8">
-                    Don't have an account?{' '}
-                    <button
-                        type="button"
-                        onClick={() => toast.error('Ask an existing admin to create an account.')}
-                        className="font-medium text-[#003cff] hover:text-blue-700"
-                    >
-                        Sign Up
-                    </button>
-                </p>
+                <h1 className="text-center text-xl font-bold text-black mb-8">Welcome</h1>
 
                 <form onSubmit={handleLogin}>
                     <div className="space-y-3">
