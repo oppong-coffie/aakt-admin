@@ -8,7 +8,7 @@ import Users from './pages/Users';
 import Admins from './pages/Admins';
 import Login from './pages/Login';
 import Onboardings from './pages/Onboardings';
-import Portfolio from './pages/Portfolio';
+import Projects from './pages/Projects';
 import Folders from './pages/Folders';
 import BusinessItems from './pages/BusinessItems';
 import BusinessDocuments from './pages/BusinessDocuments';
@@ -55,7 +55,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/business" element={<Business />} />
-                    <Route path="/projects" element={<Portfolio />} />
+                    <Route path="/projects" element={<Projects />} />
                     <Route path="/folders" element={<Folders />} />
                     <Route path="/business-items" element={<BusinessItems />} />
                     <Route path="/business-documents" element={<BusinessDocuments />} />

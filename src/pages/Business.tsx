@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import { portfolioApi } from '../services/api';
+import { adminApi } from '../services/api';
 import { toast } from '../components/Toast';
 
 type BusinessItem = {
   _id?: string;
   id?: string;
+  businessName?: string;
   name?: string;
+  product?: string;
   industry?: string;
+  customer?: string;
   description?: string;
   createdAt?: string;
 };
+// fake git
 
 const Business = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +23,7 @@ const Business = () => {
 
   const fetchBusinesses = async () => {
     try {
-      const data = await portfolioApi.getAllBusinesses();
+      const data = await adminApi.getAllBusinesses();
       const list = Array.isArray(data) ? data : (data.businesses || data.data || []);
       setBusinesses(list);
     } catch (err: unknown) {
@@ -42,10 +46,10 @@ const Business = () => {
     if (!query) return businesses;
 
     return businesses.filter((business) => {
-      const name = business.name?.toLowerCase() || '';
-      const industry = business.industry?.toLowerCase() || '';
-      const description = business.description?.toLowerCase() || '';
-      return name.includes(query) || industry.includes(query) || description.includes(query);
+      const name = (business.businessName || business.name || '').toLowerCase();
+      const product = (business.product || business.industry || '').toLowerCase();
+      const customer = (business.customer || business.description || '').toLowerCase();
+      return name.includes(query) || product.includes(query) || customer.includes(query);
     });
   }, [businesses, searchQuery]);
 
@@ -83,8 +87,8 @@ const Business = () => {
           <div className="w-full overflow-x-auto">
             <div className="grid grid-cols-4 gap-4 pb-4 text-[13px] font-semibold text-gray-900 border-b border-gray-200 min-w-[700px]">
               <div>Name</div>
-              <div>Industry</div>
-              <div>Description</div>
+              <div>Industry / Product</div>
+              <div>Description / Customer</div>
               <div>Created</div>
             </div>
 
@@ -94,9 +98,11 @@ const Business = () => {
                   key={business._id || business.id || index}
                   className="grid grid-cols-4 gap-4 py-4 text-[13px] text-gray-600 border-b border-gray-100 items-center hover:bg-gray-50"
                 >
-                  <div className="font-medium text-gray-900">{business.name || 'N/A'}</div>
-                  <div>{business.industry || 'N/A'}</div>
-                  <div className="truncate">{business.description || 'N/A'}</div>
+                  <div className="font-medium text-gray-900">
+                    {business.businessName || business.name || 'N/A'}
+                  </div>
+                  <div>{business.product || business.industry || 'N/A'}</div>
+                  <div className="truncate">{business.customer || business.description || 'N/A'}</div>
                   <div className="text-[11px] text-gray-500">
                     {business.createdAt ? new Date(business.createdAt).toLocaleDateString() : 'N/A'}
                   </div>

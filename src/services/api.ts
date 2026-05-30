@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://aakt-backend-production.up.railway.app';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Get token from localStorage
 const getAuthToken = () => localStorage.getItem('auth_token');
@@ -333,11 +333,65 @@ export const adminApi = {
     getAllUsers: () =>
         apiRequest('/admin/users', { method: 'GET' }),
 
+    getUserById: (id: string) =>
+        apiRequest(`/admin/users/${id}`, { method: 'GET' }),
+
+    updateUser: (id: string, data: Record<string, unknown>) =>
+        apiRequest(`/admin/users/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteUser: (id: string) =>
+        apiRequest(`/admin/users/${id}`, { method: 'DELETE' }),
+
     getAllAdmins: () =>
-        apiRequest('/admin/users', { method: 'GET' }),
+        apiRequest('/admin/admins', { method: 'GET' }),
+
+    getAdminById: (id: string) =>
+        apiRequest(`/admin/admins/${id}`, { method: 'GET' }),
+
+    updateAdmin: (id: string, data: Record<string, unknown>) =>
+        apiRequest(`/admin/admins/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteAdmin: (id: string) =>
+        apiRequest(`/admin/admins/${id}`, { method: 'DELETE' }),
+
+    getAllProjects: () =>
+        apiRequest('/admin/projects', { method: 'GET' }),
+
+    getProjectById: (id: string) =>
+        apiRequest(`/admin/projects/${id}`, { method: 'GET' }),
+
+    updateProject: (id: string, data: Record<string, unknown>) =>
+        apiRequest(`/admin/projects/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteProject: (id: string) =>
+        apiRequest(`/admin/projects/${id}`, { method: 'DELETE' }),
+
+    getBusinessById: (id: string) =>
+        apiRequest(`/admin/businesses/${id}`, { method: 'GET' }),
+
+    updateBusiness: (id: string, data: Record<string, unknown>) =>
+        apiRequest(`/admin/businesses/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteBusiness: (id: string) =>
+        apiRequest(`/admin/businesses/${id}`, { method: 'DELETE' }),
 
     getAllOnboardings: () =>
         apiRequest('/admin/onboardings', { method: 'GET' }),
+
+    getDashboardStats: () =>
+        apiRequest('/admin/dashboard', { method: 'GET' }),
 
     createOnboarding: (data: {
         country: string;
