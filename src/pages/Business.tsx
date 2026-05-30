@@ -14,6 +14,7 @@ type BusinessItem = {
   description?: string;
   createdAt?: string;
 };
+// fake git
 
 const Business = () => {
   const [searchQuery, setSearchQuery] = useState('');
